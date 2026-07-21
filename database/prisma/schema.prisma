@@ -1,0 +1,275 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserStatus {
+  ACTIVE
+  LOCKED
+  SUSPENDED
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum TransactionType {
+  INTERNAL
+  EXTERNAL
+  BILL_PAYMENT
+}
+
+enum LoanStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum CardStatus {
+  ACTIVE
+  FROZEN
+  BLOCKED
+  EXPIRED
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(30)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  users       User[]
+
+  @@map("roles")
+}
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  roleId        String         @map("role_id") @db.Uuid
+  email         String         @unique @db.VarChar(255)
+  passwordHash  String         @map("password_hash") @db.VarChar(255)
+  status        UserStatus     @default(ACTIVE)
+  emailVerified Boolean        @default(false) @map("email_verified")
+  lastLogin     DateTime?      @map("last_login") @db.Timestamptz
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  role          Role           @relation(fields: [roleId], references: [id])
+  customer      Customer?
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  apiKeys       ApiKey[]
+
+  @@map("users")
+}
+
+model Customer {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @unique @map("user_id") @db.Uuid
+  firstName     String        @map("first_name") @db.VarChar(100)
+  lastName      String        @map("last_name") @db.VarChar(100)
+  nic           String        @unique @db.VarChar(20)
+  dob           DateTime      @db.Date
+  phone         String        @db.VarChar(20)
+  address       String        @db.Text
+  city          String        @db.VarChar(100)
+  country       String        @db.VarChar(100)
+  occupation    String?       @db.VarChar(100)
+  profileImage  String?       @map("profile_image") @db.Text
+  kycStatus     String        @default("PENDING") @map("kyc_status") @db.VarChar(50)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts      Account[]
+  beneficiaries Beneficiary[]
+  loans         Loan[]
+
+  @@map("customers")
+}
+
+model Account {
+  id                String             @id @default(uuid()) @db.Uuid
+  customerId        String             @map("customer_id") @db.Uuid
+  accountNumber     String             @unique @map("account_number") @db.VarChar(30)
+  accountType       String             @default("Savings") @map("account_type") @db.VarChar(50)
+  currency          String             @default("LKR") @db.VarChar(3)
+  balance           Decimal            @default(0.00) @db.Decimal(15, 2)
+  availableBalance  Decimal            @default(0.00) @map("available_balance") @db.Decimal(15, 2)
+  branch            String             @default("Main Branch") @db.VarChar(100)
+  status            AccountStatus      @default(ACTIVE)
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  customer          Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  sentTransactions  Transaction[]      @relation("SentTransactions")
+  receivedTransactions Transaction[]   @relation("ReceivedTransactions")
+  cards             Card[]
+  scheduledTransfers ScheduledTransfer[]
+
+  @@map("accounts")
+}
+
+model Beneficiary {
+  id            String        @id @default(uuid()) @db.Uuid
+  customerId    String        @map("customer_id") @db.Uuid
+  nickname      String?       @db.VarChar(100)
+  bankName      String        @default("DigitalBank") @map("bank_name") @db.VarChar(100)
+  accountNumber String        @map("account_number") @db.VarChar(30)
+  accountName   String        @map("account_name") @db.VarChar(250)
+  branch        String?       @db.VarChar(100)
+  favorite      Boolean       @default(false)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  transactions  Transaction[]
+  scheduledTransfers ScheduledTransfer[]
+
+  @@map("beneficiaries")
+}
+
+model Transaction {
+  id                   String            @id @default(uuid()) @db.Uuid
+  transactionReference String            @unique @map("transaction_reference") @db.VarChar(50)
+  fromAccountId        String?           @map("from_account_id") @db.Uuid
+  toAccountId          String?           @map("to_account_id") @db.Uuid
+  beneficiaryId        String?           @map("beneficiary_id") @db.Uuid
+  transactionType      TransactionType   @map("transaction_type")
+  amount               Decimal           @db.Decimal(15, 2)
+  currency             String            @default("LKR") @db.VarChar(3)
+  description          String?           @db.Text
+  status               TransactionStatus @default(PENDING)
+  fee                  Decimal           @default(0.00) @db.Decimal(15, 2)
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  fromAccount          Account?          @relation("SentTransactions", fields: [fromAccountId], references: [id], onDelete: SetNull)
+  toAccount            Account?          @relation("ReceivedTransactions", fields: [toAccountId], references: [id], onDelete: SetNull)
+  beneficiary          Beneficiary?      @relation(fields: [beneficiaryId], references: [id], onDelete: SetNull)
+
+  @@map("transactions")
+}
+
+model ScheduledTransfer {
+  id            String      @id @default(uuid()) @db.Uuid
+  customerId    String      @map("customer_id") @db.Uuid
+  fromAccount   String      @map("from_account") @db.Uuid
+  beneficiaryId String      @map("beneficiary_id") @db.Uuid
+  amount        Decimal     @db.Decimal(15, 2)
+  frequency     String      @db.VarChar(50)
+  nextExecution DateTime    @map("next_execution") @db.Timestamptz
+  status        String      @default("ACTIVE") @db.VarChar(50)
+  account       Account     @relation(fields: [fromAccount], references: [id], onDelete: Cascade)
+  beneficiary   Beneficiary @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+
+  @@map("scheduled_transfers")
+}
+
+model Card {
+  id                   String      @id @default(uuid()) @db.Uuid
+  accountId            String      @map("account_id") @db.Uuid
+  cardNumber           String      @unique @map("card_number") @db.VarChar(16)
+  cardType             String      @default("DEBIT") @map("card_type") @db.VarChar(50)
+  expiry               String      @db.VarChar(5)
+  cvvHash              String      @map("cvv_hash") @db.VarChar(255)
+  status               CardStatus  @default(ACTIVE)
+  onlineEnabled        Boolean     @default(true) @map("online_enabled")
+  internationalEnabled Boolean     @default(false) @map("international_enabled")
+  account              Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  limits               CardLimit?
+
+  @@map("cards")
+}
+
+model CardLimit {
+  id               String   @id @default(uuid()) @db.Uuid
+  cardId           String   @unique @map("card_id") @db.Uuid
+  dailyLimit       Decimal  @default(100000.00) @map("daily_limit") @db.Decimal(15, 2)
+  atmLimit         Decimal  @default(50000.00) @map("atm_limit") @db.Decimal(15, 2)
+  onlineLimit      Decimal  @default(50000.00) @map("online_limit") @db.Decimal(15, 2)
+  contactlessLimit Decimal  @default(5000.00) @map("contactless_limit") @db.Decimal(15, 2)
+  updatedAt        DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  card             Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@map("card_limits")
+}
+
+model Loan {
+  id             String          @id @default(uuid()) @db.Uuid
+  customerId     String          @map("customer_id") @db.Uuid
+  loanType       String          @map("loan_type") @db.VarChar(100)
+  requestedAmount Decimal         @map("requested_amount") @db.Decimal(15, 2)
+  approvedAmount Decimal         @default(0.00) @map("approved_amount") @db.Decimal(15, 2)
+  interestRate   Decimal         @map("interest_rate") @db.Decimal(5, 2)
+  durationMonths Int             @map("duration_months")
+  emi            Decimal         @db.Decimal(15, 2)
+  status         LoanStatus      @default(SUBMITTED)
+  submittedAt    DateTime        @default(now()) @map("submitted_at") @db.Timestamptz
+  customer       Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  documents      LoanDocument[]
+
+  @@map("loans")
+}
+
+model LoanDocument {
+  id           String   @id @default(uuid()) @db.Uuid
+  loanId       String   @map("loan_id") @db.Uuid
+  documentType String   @map("document_type") @db.VarChar(100)
+  fileName     String   @map("file_name") @db.VarChar(255)
+  filePath     String   @map("file_path") @db.Text
+  uploadedAt   DateTime @default(now()) @map("uploaded_at") @db.Timestamptz
+  loan         Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  @@map("loan_documents")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  title     String           @db.VarChar(255)
+  message   String           @db.Text
+  type      NotificationType @default(PUSH)
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  action    String   @db.VarChar(255)
+  module    String   @db.VarChar(100)
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model ApiKey {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  applicationName String    @map("application_name") @db.VarChar(100)
+  apiKey          String    @unique @map("api_key") @db.VarChar(255)
+  secret          String    @db.VarChar(255)
+  status          String    @default("ACTIVE") @db.VarChar(50)
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
