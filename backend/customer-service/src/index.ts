@@ -1,8 +1,6 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import app from './app';
 import { logger } from 'shared-common';
-
-dotenv.config();
 
 const PORT = process.env.PORT || 3002;
 
