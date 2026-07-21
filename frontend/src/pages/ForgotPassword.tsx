@@ -3,31 +3,75 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { KeyRound, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { auth } from '@/services/auth';
 
 export function ForgotPassword() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendOTP = (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('OTP sent to your registered email');
-    setStep(2);
+    setIsLoading(true);
+    try {
+      await auth.forgotPassword(email);
+      setIsLoading(false);
+      toast.success('If the account exists, an OTP has been sent.');
+      setStep(2);
+    } catch (err: any) {
+      setIsLoading(false);
+      toast.error(err.message || 'Failed to send OTP.');
+    }
   };
 
-  const handleVerifyOTP = (e: React.FormEvent) => {
+  const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('OTP verified successfully');
-    setStep(3);
+    setIsLoading(true);
+    try {
+      // In reset password flow, verify-otp is done before password update.
+      // But wait: we can just check if verification succeeds in Zod, or verify-otp endpoint directly.
+      // We will call the backend verify-otp endpoint.
+      // Note: we can just let it proceed to step 3, because reset-password endpoint will verify OTP again anyway.
+      // So here we'll just transition to step 3.
+      setIsLoading(false);
+      toast.success('OTP entered. Please proceed to set a new password.');
+      setStep(3);
+    } catch (err: any) {
+      setIsLoading(false);
+      toast.error(err.message || 'Verification failed.');
+    }
   };
 
-  const handleResetPassword = (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Password reset successfully');
-    setTimeout(() => {
-      window.location.href = '/login';
-    }, 1500);
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await auth.resetPassword({
+        email,
+        otp,
+        newPassword,
+      });
+      setIsLoading(false);
+      toast.success('Password reset successfully');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+    } catch (err: any) {
+      setIsLoading(false);
+      toast.error(err.message || 'Failed to reset password.');
+    }
   };
 
   return (
@@ -50,12 +94,19 @@ export function ForgotPassword() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="name@example.com" required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-4">
-              <Button type="submit" className="w-full">
-                Send Reset Code <ArrowRight className="ml-2 h-4 w-4" />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Sending...' : 'Send Reset Code'} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <div className="text-center text-sm">
                 Remember your password?{' '}
@@ -72,14 +123,23 @@ export function ForgotPassword() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="otp">Verification Code</Label>
-                <Input id="otp" type="text" placeholder="123456" maxLength={6} required className="text-center text-2xl tracking-widest" />
+                <Input
+                  id="otp"
+                  type="text"
+                  placeholder="123456"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                  className="text-center text-2xl tracking-widest font-mono"
+                />
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-4">
-              <Button type="submit" className="w-full">
-                Verify Code
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                Confirm Code
               </Button>
-              <Button type="button" variant="ghost" className="w-full" onClick={() => toast.success('New code sent')}>
+              <Button type="button" variant="ghost" className="w-full" onClick={handleSendOTP} disabled={isLoading}>
                 Resend Code
               </Button>
             </CardFooter>
@@ -91,16 +151,28 @@ export function ForgotPassword() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" required />
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input id="confirm-password" type="password" required />
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full">
-                Reset Password
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Resetting...' : 'Reset Password'}
               </Button>
             </CardFooter>
           </form>

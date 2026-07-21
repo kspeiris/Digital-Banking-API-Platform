@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { auth, UserProfile } from '@/services/auth';
 import { 
   Home, 
   CreditCard, 
@@ -69,6 +70,29 @@ const devNavigation: SidebarItem[] = [
 export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'developer' }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await auth.getProfile();
+        setProfile(data);
+      } catch (err) {
+        auth.clearSession();
+        navigate('/login');
+      }
+    };
+    fetchProfile();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await auth.logout();
+    } catch {
+      // Ignore
+    }
+    navigate('/login');
+  };
 
   let navigation = customerNavigation;
   if (role === 'admin') navigation = adminNavigation;
@@ -125,13 +149,13 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
               </Avatar>
             </div>
             <div className="overflow-hidden flex-1 text-left">
-              <p className="text-sm font-medium text-white truncate">Alexander Pierce</p>
-              <p className="text-xs text-slate-400 truncate">Premium Account</p>
+              <p className="text-sm font-medium text-white truncate">{profile?.name || 'Loading...'}</p>
+              <p className="text-xs text-slate-400 truncate">{profile?.role || 'Premium Account'}</p>
             </div>
             <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8" onClick={() => navigate('/customer/settings')}>
               <SettingsIcon className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8" onClick={() => navigate('/login')}>
+            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
