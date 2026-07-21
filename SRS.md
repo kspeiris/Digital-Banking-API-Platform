@@ -1,4 +1,4 @@
-Below is a **normal Software Requirements Specification (SRS)** for your **Digital Banking API Platform**. It follows a simple structure commonly used in university software engineering projects while still being professional.
+
 
 ---
 
