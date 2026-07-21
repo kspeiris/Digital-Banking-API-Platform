@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { auth, UserProfile } from '@/services/auth';
+import { auth } from '@/services/auth';
+import { customer } from '@/services/customer';
 import { 
   Home, 
   CreditCard, 
@@ -70,13 +71,29 @@ const devNavigation: SidebarItem[] = [
 export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'developer' }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await auth.getProfile();
-        setProfile(data);
+        const session = auth.getSession();
+        const userRole = session?.user?.role?.toUpperCase();
+
+        if (userRole === 'CUSTOMER') {
+          const custProfile = await customer.getProfile();
+          setProfile({
+            name: `${custProfile.firstName} ${custProfile.lastName}`,
+            role: 'Premium Account',
+            profileImage: custProfile.profileImage,
+          });
+        } else {
+          const authProfile = await auth.getProfile();
+          setProfile({
+            name: authProfile.name,
+            role: authProfile.role,
+            profileImage: '',
+          });
+        }
       } catch (err) {
         auth.clearSession();
         navigate('/login');
@@ -142,9 +159,9 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
         </div>
         <div className="p-4 mt-auto border-t border-slate-800">
           <div className="flex items-center gap-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex-shrink-0 border border-slate-600 flex items-center justify-center text-white">
+            <div className="w-8 h-8 rounded-full bg-slate-700 flex-shrink-0 border border-slate-600 flex items-center justify-center text-white overflow-hidden">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="https://github.com/shadcn.png" alt="@user" />
+                <AvatarImage src={profile?.profileImage ? `http://localhost:3002${profile.profileImage}` : "https://github.com/shadcn.png"} alt="@user" />
                 <AvatarFallback>U</AvatarFallback>
               </Avatar>
             </div>
