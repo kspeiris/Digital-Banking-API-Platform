@@ -7,12 +7,12 @@ ON CONFLICT (name) DO NOTHING;
 
 -- 2. Seed Admin User (Password is 'Admin@123' bcrypt hash or placeholder)
 INSERT INTO users (id, role_id, email, password_hash, status, email_verified, updated_at) VALUES 
-('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'admin@bank.com', '$2b$10$Uq1YhXhV98yAec1h0v3Ofe6vGz2g.rUq1v/h9l.jCgHqfXpGqfH1i', 'ACTIVE', TRUE, NOW())
+('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'admin@bank.com', '$2b$12$HhSIsIyOLjQhRIRW75xxM.5gNBCRnR4sjVIHpYlcp94MmG3nsTidG', 'ACTIVE', TRUE, NOW())
 ON CONFLICT (email) DO NOTHING;
 
 -- 3. Seed Sample Customer User (Password is 'Customer123')
 INSERT INTO users (id, role_id, email, password_hash, status, email_verified, updated_at) VALUES 
-('b0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000002', 'john.doe@gmail.com', '$2b$10$Tq1YhXhV98yAec1h0v3Ofe6vGz2g.rUq1v/h9l.jCgHqfXpGqfH1i', 'ACTIVE', TRUE, NOW())
+('b0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000002', 'john.doe@gmail.com', '$2b$12$.O1lyGyyXQ/fUm6CNgeITeLO4s62ETnaoRiGVX72JYivgFkqd.1Fm', 'ACTIVE', TRUE, NOW())
 ON CONFLICT (email) DO NOTHING;
 
 -- 4. Seed Customer Profile
