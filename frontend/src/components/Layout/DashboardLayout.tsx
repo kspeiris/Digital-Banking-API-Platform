@@ -75,8 +75,14 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
 
   useEffect(() => {
     const fetchProfile = async () => {
+      const session = auth.getSession();
+      if (!session || !session.accessToken) {
+        auth.clearSession();
+        navigate('/login');
+        return;
+      }
+
       try {
-        const session = auth.getSession();
         const userRole = session?.user?.role?.toUpperCase();
 
         if (userRole === 'CUSTOMER') {
