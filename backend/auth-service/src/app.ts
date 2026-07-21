@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import { errorMiddleware, logger, setServiceMeta } from 'shared-common';
 
+import authRouter from './routes/auth.routes';
+
 setServiceMeta('auth-service');
 
 const app = express();
@@ -19,14 +21,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Basic routing placeholder for Phase 3
-app.post('/api/v1/auth/login', (req, res) => {
-  res.json({ message: 'Login endpoint placeholder' });
-});
-
-app.post('/api/v1/auth/register', (req, res) => {
-  res.json({ message: 'Register endpoint placeholder' });
-});
+app.use('/api/v1/auth', authRouter);
 
 app.use(errorMiddleware);
 
