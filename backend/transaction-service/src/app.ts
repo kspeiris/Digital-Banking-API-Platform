@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import { errorMiddleware, logger, setServiceMeta } from 'shared-common';
+import { logger, setServiceMeta } from 'shared-common';
+import transactionRouter from './routes/transaction.routes';
+import { errorMiddleware } from './middleware/error.middleware';
 
 setServiceMeta('transaction-service');
 
@@ -18,6 +20,8 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+app.use('/api/v1/transactions', transactionRouter);
 
 app.use(errorMiddleware);
 
