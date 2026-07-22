@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { auth } from '@/services/auth';
+import { customer } from '@/services/customer';
 import { 
   Home, 
   CreditCard, 
@@ -69,6 +71,51 @@ const devNavigation: SidebarItem[] = [
 export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'developer' }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const session = auth.getSession();
+      if (!session || !session.accessToken) {
+        auth.clearSession();
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const userRole = session?.user?.role?.toUpperCase();
+
+        if (userRole === 'CUSTOMER') {
+          const custProfile = await customer.getProfile();
+          setProfile({
+            name: `${custProfile.firstName} ${custProfile.lastName}`,
+            role: 'Premium Account',
+            profileImage: custProfile.profileImage,
+          });
+        } else {
+          const authProfile = await auth.getProfile();
+          setProfile({
+            name: authProfile.name,
+            role: authProfile.role,
+            profileImage: '',
+          });
+        }
+      } catch (err) {
+        auth.clearSession();
+        navigate('/login');
+      }
+    };
+    fetchProfile();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await auth.logout();
+    } catch {
+      // Ignore
+    }
+    navigate('/login');
+  };
 
   let navigation = customerNavigation;
   if (role === 'admin') navigation = adminNavigation;
@@ -118,20 +165,20 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
         </div>
         <div className="p-4 mt-auto border-t border-slate-800">
           <div className="flex items-center gap-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex-shrink-0 border border-slate-600 flex items-center justify-center text-white">
+            <div className="w-8 h-8 rounded-full bg-slate-700 flex-shrink-0 border border-slate-600 flex items-center justify-center text-white overflow-hidden">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="https://github.com/shadcn.png" alt="@user" />
+                <AvatarImage src={profile?.profileImage ? `http://localhost:3002${profile.profileImage}` : "https://github.com/shadcn.png"} alt="@user" />
                 <AvatarFallback>U</AvatarFallback>
               </Avatar>
             </div>
             <div className="overflow-hidden flex-1 text-left">
-              <p className="text-sm font-medium text-white truncate">Alexander Pierce</p>
-              <p className="text-xs text-slate-400 truncate">Premium Account</p>
+              <p className="text-sm font-medium text-white truncate">{profile?.name || 'Loading...'}</p>
+              <p className="text-xs text-slate-400 truncate">{profile?.role || 'Premium Account'}</p>
             </div>
             <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8" onClick={() => navigate('/customer/settings')}>
               <SettingsIcon className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8" onClick={() => navigate('/login')}>
+            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>

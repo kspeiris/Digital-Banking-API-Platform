@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { auth } from '@/services/auth';
 
 export function Login() {
   const navigate = useNavigate();
@@ -12,24 +13,29 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const session = await auth.login({ email, password });
       setIsLoading(false);
-      if (email.includes('admin')) {
+      
+      const role = session.user.role.toUpperCase();
+      if (role === 'ADMIN') {
         toast.success('Welcome back, Administrator');
         navigate('/admin');
-      } else if (email.includes('dev')) {
+      } else if (role === 'DEVELOPER') {
         toast.success('Welcome to Developer Portal');
         navigate('/dev-portal');
       } else {
         toast.success('Login successful');
         navigate('/customer');
       }
-    }, 1000);
+    } catch (err: any) {
+      setIsLoading(false);
+      toast.error(err.message || 'Login failed. Please check your credentials.');
+    }
   };
 
   return (
