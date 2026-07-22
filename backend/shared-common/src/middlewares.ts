@@ -54,12 +54,17 @@ export function authMiddleware(
     const secret = process.env.JWT_SECRET || 'fallback-secret';
 
     const decoded = jwt.verify(token, secret) as {
-      id: string;
+      id?: string;
+      sub?: string;
       email: string;
       role: string;
     };
 
-    req.user = decoded;
+    req.user = {
+      id: decoded.id || decoded.sub || '',
+      email: decoded.email,
+      role: decoded.role,
+    };
     next();
   } catch (err) {
     next(new UnauthorizedException('Invalid or expired token'));
