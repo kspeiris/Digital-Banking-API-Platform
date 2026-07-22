@@ -1,9 +1,8 @@
-import dotenv from 'dotenv';
+import './env'; // MUST be first — loads .env before any other module reads process.env
 import app from './app';
 import { logger } from 'shared-common';
 import { SchedulerService } from './services/scheduler.service';
 
-dotenv.config();
 
 const PORT = process.env.PORT || 3004;
 
