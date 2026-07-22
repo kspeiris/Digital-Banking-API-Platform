@@ -29,8 +29,20 @@ if (process.env.NODE_ENV === 'test') {
   redisClient = createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379',
   });
-  redisClient.on('error', (err: any) => logger.error('Redis Client Error', err));
-  redisClient.connect().catch((err: any) => logger.error('Redis connection failed', err));
+
+  // Throttle error logging — the client retries automatically; logging every attempt floods the console.
+  let lastRedisErrorLog = 0;
+  redisClient.on('error', (err: any) => {
+    const now = Date.now();
+    if (now - lastRedisErrorLog > 30_000) {
+      lastRedisErrorLog = now;
+      logger.error('Redis Client Error (will keep retrying)', { code: err.code, message: err.message });
+    }
+  });
+
+  redisClient.connect().catch((err: any) =>
+    logger.error('Redis initial connection failed', { code: err.code, message: err.message })
+  );
 }
 
 export const redis = redisClient;

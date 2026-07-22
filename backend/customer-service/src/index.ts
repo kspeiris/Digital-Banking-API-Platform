@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './env'; // MUST be first — loads .env with override before any other module reads process.env
 import app from './app';
 import { logger } from 'shared-common';
 
