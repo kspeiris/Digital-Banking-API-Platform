@@ -1,41 +1,271 @@
-version: '3.8'
+version: "3.9"
 
 services:
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - wso2am
+    networks:
+      - bank-network
+
   postgres:
-    image: postgres:15-alpine
-    container_name: db-postgres
+    image: postgres:16
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: digital_banking
-    ports:
-      - '5432:5432'
+      POSTGRES_DB: bankdb
+      POSTGRES_USER: bankuser
+      POSTGRES_PASSWORD: password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
       - ../database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bankuser -d bankdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bank-network
 
   redis:
-    image: redis:7-alpine
-    container_name: cache-redis
+    image: redis:7
     restart: always
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - bank-network
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: db-pgadmin
+  wso2am:
+    image: wso2/wso2am:4.3.0
+    container_name: wso2am-gateway
+    restart: always
+    ports:
+      - "9443:9443"
+      - "8243:8243"
+      - "8280:8280"
+    environment:
+      - PROFILE=api-manager
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  auth-service:
+    build:
+      context: ../
+      dockerfile: backend/auth-service/Dockerfile
+    container_name: service-auth
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@digitalbank.com
-      PGADMIN_DEFAULT_PASSWORD: adminpassword
+      - PORT=3001
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super-secret-key-change-in-production
     ports:
-      - '5050:80'
+      - "3001:3001"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  customer-service:
+    build:
+      context: ../
+      dockerfile: backend/customer-service/Dockerfile
+    container_name: service-customer
+    restart: always
+    environment:
+      - PORT=3002
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - JWT_SECRET=super-secret-key-change-in-production
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  account-service:
+    build:
+      context: ../
+      dockerfile: backend/account-service/Dockerfile
+    container_name: service-account
+    restart: always
+    environment:
+      - PORT=3003
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super-secret-key-change-in-production
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  beneficiary-service:
+    build:
+      context: ../
+      dockerfile: backend/beneficiary-service/Dockerfile
+    container_name: service-beneficiary
+    restart: always
+    environment:
+      - PORT=3005
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - JWT_SECRET=super-secret-key-change-in-production
+    ports:
+      - "3005:3005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  transaction-service:
+    build:
+      context: ../
+      dockerfile: backend/transaction-service/Dockerfile
+    container_name: service-transaction
+    restart: always
+    environment:
+      - PORT=3004
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - JWT_SECRET=super-secret-key-change-in-production
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  card-service:
+    build:
+      context: ../
+      dockerfile: backend/card-service/Dockerfile
+    container_name: service-card
+    restart: always
+    environment:
+      - PORT=3006
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - JWT_SECRET=super-secret-key-change-in-production
+    ports:
+      - "3006:3006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  loan-service:
+    build:
+      context: ../
+      dockerfile: backend/loan-service/Dockerfile
+    container_name: service-loan
+    restart: always
+    environment:
+      - PORT=3007
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - JWT_SECRET=super-secret-key-change-in-production
+    ports:
+      - "3007:3007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - loan-uploads:/usr/src/app/uploads
+    networks:
+      - bank-network
+
+  notification-service:
+    build:
+      context: ../
+      dockerfile: backend/notification-service/Dockerfile
+    container_name: service-notification
+    restart: always
+    environment:
+      - PORT=3008
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super-secret-key-change-in-production
+    ports:
+      - "3008:3008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  admin-service:
+    build:
+      context: ../
+      dockerfile: backend/admin-service/Dockerfile
+    container_name: service-admin
+    restart: always
+    environment:
+      - PORT=3009
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super-secret-key-change-in-production
+    ports:
+      - "3009:3009"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bank-network
+
+  developer-service:
+    build:
+      context: ../
+      dockerfile: backend/developer-service/Dockerfile
+    container_name: service-developer
+    restart: always
+    environment:
+      - PORT=3010
+      - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
+      - JWT_SECRET=super-secret-key-change-in-production
+    ports:
+      - "3010:3010"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bank-network
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres-data:
+  redis-data:
+  loan-uploads:
+
+networks:
+  bank-network:
+    driver: bridge
