@@ -2,22 +2,17 @@ import crypto from 'crypto';
 import { prisma } from '../config/database';
 import { generateAccessToken, TokenPayload } from '../utils/jwt';
 import { UnauthorizedException } from 'shared-common';
+import { redis } from '../config/redis';
 
 export class TokenService {
   async generateTokens(payload: TokenPayload) {
     const accessToken = generateAccessToken(payload);
     const refreshToken = this.generateRandomToken();
 
-    // Store the hashed refresh token in database (valid for 7 days)
     const hashedToken = this.hashToken(refreshToken);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    await prisma.refreshToken.create({
-      data: {
-        userId: payload.userId,
-        token: hashedToken,
-        expiresAt,
-      },
+    // Store in Redis (valid for 7 days = 604800 seconds)
+    await redis.set(`refresh:token:${hashedToken}`, payload.userId, {
+      EX: 7 * 24 * 60 * 60,
     });
 
     return { accessToken, refreshToken };
@@ -26,36 +21,34 @@ export class TokenService {
   async refreshAccessToken(refreshToken: string) {
     const hashedToken = this.hashToken(refreshToken);
 
-    const tokenRecord = await prisma.refreshToken.findUnique({
-      where: { token: hashedToken },
-      include: { user: { include: { role: true } } },
-    });
-
-    if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
-      if (tokenRecord) {
-        await prisma.refreshToken.delete({ where: { id: tokenRecord.id } });
-      }
+    const userId = await redis.get(`refresh:token:${hashedToken}`);
+    if (!userId) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    // Rotate refresh token
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
     const newAccessToken = generateAccessToken({
-      userId: tokenRecord.user.id,
-      email: tokenRecord.user.email,
-      role: tokenRecord.user.role.name,
+      userId: user.id,
+      email: user.email,
+      role: user.role.name,
     });
     const newRefreshToken = this.generateRandomToken();
     const newHashedToken = this.hashToken(newRefreshToken);
-    const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    await prisma.refreshToken.delete({ where: { id: tokenRecord.id } });
+    // Delete old refresh token
+    await redis.del(`refresh:token:${hashedToken}`);
 
-    await prisma.refreshToken.create({
-      data: {
-        userId: tokenRecord.userId,
-        token: newHashedToken,
-        expiresAt: newExpiresAt,
-      },
+    // Store new refresh token
+    await redis.set(`refresh:token:${newHashedToken}`, user.id, {
+      EX: 7 * 24 * 60 * 60,
     });
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
@@ -63,13 +56,7 @@ export class TokenService {
 
   async revokeRefreshToken(refreshToken: string) {
     const hashedToken = this.hashToken(refreshToken);
-    try {
-      await prisma.refreshToken.delete({
-        where: { token: hashedToken },
-      });
-    } catch (err) {
-      // Ignore if token doesn't exist
-    }
+    await redis.del(`refresh:token:${hashedToken}`);
   }
 
   private generateRandomToken(): string {

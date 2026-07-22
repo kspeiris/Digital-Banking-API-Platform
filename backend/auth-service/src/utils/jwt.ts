@@ -13,6 +13,7 @@ export function generateAccessToken(payload: TokenPayload): string {
   return jwt.sign(
     {
       sub: payload.userId,
+      id: payload.userId,
       email: payload.email,
       role: payload.role,
     },

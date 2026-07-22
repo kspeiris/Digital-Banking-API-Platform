@@ -1,19 +1,38 @@
+import { createClient } from 'redis';
 import { logger } from 'shared-common';
 
-// Simple mock Redis client structure to support future Redis caching integration (Phase 13)
-// without breaking the present compilation.
-export const redisClient = {
-  get: async (key: string): Promise<string | null> => {
-    logger.debug(`Redis GET mock for key: ${key}`);
-    return null;
-  },
-  set: async (key: string, value: string, expirySeconds?: number): Promise<void> => {
-    logger.debug(`Redis SET mock for key: ${key} (expiry: ${expirySeconds}s)`);
-  },
-  del: async (key: string): Promise<void> => {
-    logger.debug(`Redis DEL mock for key: ${key}`);
-  },
-  connect: async (): Promise<void> => {
-    logger.info('Connected to Mock Redis Cache Client');
-  }
-};
+let redisClient: any;
+
+if (process.env.NODE_ENV === 'test') {
+  // In-memory mock store
+  const store = new Map<string, string>();
+  redisClient = {
+    connect: async () => {},
+    get: async (key: string) => store.get(key) || null,
+    set: async (key: string, value: string, options?: any) => {
+      store.set(key, value);
+      return 'OK';
+    },
+    del: async (key: string) => {
+      const deleted = store.has(key);
+      store.delete(key);
+      return deleted ? 1 : 0;
+    },
+    incr: async (key: string) => {
+      const val = Number(store.get(key) || 0) + 1;
+      store.set(key, String(val));
+      return val;
+    },
+    expire: async (key: string, seconds: number) => 1,
+    quit: async () => {},
+  };
+} else {
+  redisClient = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+  });
+  redisClient.on('error', (err: any) => logger.error('Redis Client Error', err));
+  redisClient.connect().catch((err: any) => logger.error('Redis connection failed', err));
+}
+
+export const redis = redisClient;
+export default redis;
