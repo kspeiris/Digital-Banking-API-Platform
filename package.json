@@ -1,12 +1,25 @@
 {
   "devDependencies": {
     "@playwright/test": "^1.42.1",
-    "prisma": "^5.22.0"
+    "@types/bcryptjs": "^2.4.6",
+    "concurrently": "^9.0.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0"
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5"
+  },
+  "prisma": {
+    "schema": "./database/prisma/schema.prisma"
   },
   "scripts": {
+    "dev": "powershell -File ./start-redis.ps1 && concurrently --kill-others-on-fail --prefix-colors \"bgBlue,bgGreen,bgYellow,bgMagenta,bgCyan,bgRed,bgWhite,bgGray,bgGreenBright,bgBlueBright,bgYellowBright\" --names \"frontend,auth,account,customer,transaction,beneficiary,card,loan,notification,admin,developer\" \"npm run dev --prefix frontend\" \"npm run dev --prefix backend/auth-service\" \"npm run dev --prefix backend/account-service\" \"npm run dev --prefix backend/customer-service\" \"npm run dev --prefix backend/transaction-service\" \"npm run dev --prefix backend/beneficiary-service\" \"npm run dev --prefix backend/card-service\" \"npm run dev --prefix backend/loan-service\" \"npm run dev --prefix backend/notification-service\" \"npm run dev --prefix backend/admin-service\" \"npm run dev --prefix backend/developer-service\"",
+    "dev:backend": "concurrently --kill-others-on-fail --prefix-colors \"bgGreen,bgYellow,bgMagenta,bgCyan,bgRed,bgWhite,bgGray,bgGreenBright,bgBlueBright,bgYellowBright\" --names \"auth,account,customer,transaction,beneficiary,card,loan,notification,admin,developer\" \"npm run dev --prefix backend/auth-service\" \"npm run dev --prefix backend/account-service\" \"npm run dev --prefix backend/customer-service\" \"npm run dev --prefix backend/transaction-service\" \"npm run dev --prefix backend/beneficiary-service\" \"npm run dev --prefix backend/card-service\" \"npm run dev --prefix backend/loan-service\" \"npm run dev --prefix backend/notification-service\" \"npm run dev --prefix backend/admin-service\" \"npm run dev --prefix backend/developer-service\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "seed:admin": "cd backend/auth-service && npx tsx seed-admin.ts",
     "test:e2e": "playwright test",
     "test:all": "echo 'Run microservice tests here' && npm run test:e2e"
   }
