@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import { errorMiddleware, logger, setServiceMeta } from 'shared-common';
+import { logger, setServiceMeta } from 'shared-common';
+import adminRouter from './routes/admin.routes';
+import { errorMiddleware } from './middleware/error.middleware';
 
 setServiceMeta('admin-service');
 
@@ -18,6 +20,8 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+app.use('/admin', adminRouter);
 
 app.use(errorMiddleware);
 
