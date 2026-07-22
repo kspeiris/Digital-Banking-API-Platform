@@ -1,15 +1,23 @@
 import { CustomerRepository } from '../repositories/customer.repository';
 import { NotFoundException } from 'shared-common';
+import { redis } from '../config/redis';
 
 export class CustomerService {
   private customerRepository = new CustomerRepository();
 
   async getProfile(userId: string) {
+    const cacheKey = `customer:profile:${userId}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
     const customer = await this.customerRepository.findByUserId(userId);
     if (!customer) {
       throw new NotFoundException('Customer profile not found');
     }
-    return {
+
+    const profile = {
       customerId: customer.id,
       userId: customer.userId,
       firstName: customer.firstName,
@@ -25,6 +33,9 @@ export class CustomerService {
       profileImage: customer.profileImage || '',
       kycStatus: customer.kycStatus,
     };
+
+    await redis.set(cacheKey, JSON.stringify(profile), { EX: 600 }); // Cache for 10 minutes
+    return profile;
   }
 
   async updateProfile(userId: string, data: any) {
@@ -42,6 +53,8 @@ export class CustomerService {
       country: data.country,
       occupation: data.occupation,
     });
+
+    await redis.del(`customer:profile:${userId}`);
   }
 
   async updateProfileImage(userId: string, relativePath: string) {
@@ -55,6 +68,7 @@ export class CustomerService {
       profileImage: relativePath,
     });
 
+    await redis.del(`customer:profile:${userId}`);
     return relativePath;
   }
 

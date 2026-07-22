@@ -14,6 +14,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
+    "redis": "^4.6.13",
     "shared-common": "file:../shared-common",
     "sharp": "^0.35.3",
     "zod": "^4.4.3"
