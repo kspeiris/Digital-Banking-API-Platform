@@ -128,7 +128,7 @@ axios.get('https://api.digitalbank.com/v1/accounts', {
       "id": "acc_123456",
       "type": "checking",
       "balance": 7500.00,
-      "currency": "USD",
+      "currency": "LKR",
       "status": "active"
     }
   ]

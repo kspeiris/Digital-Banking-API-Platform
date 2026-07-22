@@ -117,7 +117,7 @@ export function TransactionHistory() {
                         </Badge>
                       </TableCell>
                       <TableCell className={`text-right font-medium ${tx.amount > 0 ? 'text-green-600' : ''}`}>
-                        {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                        {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('en-LK', { style: 'currency', currency: 'LKR' })}
                       </TableCell>
                     </TableRow>
                   ))

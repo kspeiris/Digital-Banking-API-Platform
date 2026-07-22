@@ -29,7 +29,7 @@ export function Dashboard() {
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Available Balance</p>
-            <h3 className="text-2xl font-bold text-slate-900">$7,500.00</h3>
+            <h3 className="text-2xl font-bold text-slate-900">Rs. 7,500.00</h3>
           </div>
           <p className="text-xs text-green-600 mt-2 flex items-center gap-1 font-medium">
             <ArrowUpRight className="h-3 w-3" />
@@ -40,7 +40,7 @@ export function Dashboard() {
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Monthly Income</p>
-            <h3 className="text-2xl font-bold text-slate-900">$3,800.00</h3>
+            <h3 className="text-2xl font-bold text-slate-900">Rs. 3,800.00</h3>
           </div>
           <div className="w-full bg-slate-100 h-1 mt-4 rounded-full overflow-hidden">
             <div className="bg-blue-500 h-full w-3/4"></div>
@@ -50,7 +50,7 @@ export function Dashboard() {
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Monthly Expenses</p>
-            <h3 className="text-2xl font-bold text-slate-900">$2,500.00</h3>
+            <h3 className="text-2xl font-bold text-slate-900">Rs. 2,500.00</h3>
           </div>
           <div className="w-full bg-slate-100 h-1 mt-4 rounded-full overflow-hidden">
             <div className="bg-orange-500 h-full w-2/5"></div>
@@ -87,10 +87,10 @@ export function Dashboard() {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `Rs.${value}`} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
-                  formatter={(value) => [`$${value}`, 'Balance']}
+                  formatter={(value) => [`Rs.${value}`, 'Balance']}
                 />
                 <Area type="monotone" dataKey="balance" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorBalance)" />
               </AreaChart>
@@ -117,7 +117,7 @@ export function Dashboard() {
                   <p className="text-xs text-slate-500">{txn.date} • {txn.type}</p>
                 </div>
                 <span className={`text-sm font-bold ${txn.positive ? 'text-green-600' : 'text-slate-900'}`}>
-                  {txn.positive ? '+' : ''}{txn.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                  {txn.positive ? '+' : ''}{txn.amount.toLocaleString('en-LK', { style: 'currency', currency: 'LKR' })}
                 </span>
               </div>
             ))}

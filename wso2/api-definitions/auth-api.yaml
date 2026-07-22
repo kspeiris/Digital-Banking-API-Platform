@@ -1,0 +1,80 @@
+openapi: 3.0.3
+info:
+  title: Authentication API
+  version: 1.0.0
+  description: API for user authentication and session management in the Digital Banking Platform.
+servers:
+  - url: http://service-auth:3001/api/v1/auth
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - role
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [CUSTOMER, ADMIN, DEVELOPER]
+      responses:
+        '201':
+          description: User registered successfully.
+        '400':
+          description: Validation failed.
+
+  /login:
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful.
+        '400':
+          description: Invalid email or password.
+
+  /logout:
+    post:
+      summary: Logout user and invalidate token
+      responses:
+        '200':
+          description: Logged out successfully.
+
+  /profile:
+    get:
+      summary: Get user profile details
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

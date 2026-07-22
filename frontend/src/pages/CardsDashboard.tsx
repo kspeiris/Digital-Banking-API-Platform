@@ -32,7 +32,7 @@ export function CardsDashboard() {
               <CardTitle>Credit Card</CardTitle>
               <Badge>Active</Badge>
             </div>
-            <CardDescription>Exp: 12/28 • Limit: $10,000</CardDescription>
+            <CardDescription>Exp: 12/28 • Limit: Rs. 10,000</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
             <Button variant="outline" size="sm" onClick={() => handleAction('Freeze Card')} className="w-full">

@@ -1,3 +1,5 @@
+import { auth } from '@/services/auth';
+
 const API_URL = 'http://localhost:3002/api/v1/customers';
 
 export interface CustomerProfile {
@@ -19,16 +21,7 @@ export interface CustomerProfile {
 
 class CustomerService {
   private getAccessToken(): string | null {
-    const saved = localStorage.getItem('db_session');
-    if (saved) {
-      try {
-        const session = JSON.parse(saved);
-        return session.accessToken;
-      } catch {
-        return null;
-      }
-    }
-    return null;
+    return auth.getAccessToken();
   }
 
   private async request(path: string, options: RequestInit = {}): Promise<any> {
@@ -47,6 +40,31 @@ class CustomerService {
     });
 
     if (!res.ok) {
+      if (res.status === 401 && token) {
+        try {
+          const newSession = await auth.refreshAccessToken();
+          const newHeaders = new Headers(options.headers || {});
+          newHeaders.set('Authorization', `Bearer ${newSession.accessToken}`);
+          if (!(options.body instanceof FormData)) {
+            newHeaders.set('Content-Type', 'application/json');
+          }
+
+          const retryRes = await fetch(`${API_URL}${path}`, {
+            ...options,
+            headers: newHeaders,
+          });
+
+          if (!retryRes.ok) {
+            const errData = await retryRes.json().catch(() => ({}));
+            throw new Error(errData.message || `Request failed with status ${retryRes.status}`);
+          }
+
+          return retryRes.json();
+        } catch (err) {
+          throw err;
+        }
+      }
+
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData.message || `Request failed with status ${res.status}`);
     }

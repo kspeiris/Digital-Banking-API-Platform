@@ -1,8 +1,13 @@
 {
   "devDependencies": {
+    "@playwright/test": "^1.42.1",
     "prisma": "^5.22.0"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0"
+  },
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:all": "echo 'Run microservice tests here' && npm run test:e2e"
   }
 }

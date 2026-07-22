@@ -1,0 +1,41 @@
+openapi: 3.0.3
+info:
+  title: Transaction Service API
+  version: 1.0.0
+  description: Core transactions engine processing fund transfers.
+servers:
+  - url: http://service-transaction:3004/api/v1/transactions
+paths:
+  /internal:
+    post:
+      summary: Process internal bank transfers
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fromAccountNumber
+                - toAccountNumber
+                - amount
+              properties:
+                fromAccountNumber:
+                  type: string
+                toAccountNumber:
+                  type: string
+                amount:
+                  type: number
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Internal transfer success.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

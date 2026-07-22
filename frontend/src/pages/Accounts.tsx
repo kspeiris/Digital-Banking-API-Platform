@@ -33,7 +33,7 @@ export function Accounts() {
           <CardContent className="flex-1 flex flex-col justify-between">
             <div className="mb-6">
               <p className="text-sm font-medium text-slate-500 mb-1">Available Balance</p>
-              <h3 className="text-3xl font-bold text-slate-900">$7,500.00</h3>
+              <h3 className="text-3xl font-bold text-slate-900">Rs. 7,500.00</h3>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-auto">
               <Button variant="outline" size="sm" render={<Link to="/customer/transfers" />}>
@@ -65,7 +65,7 @@ export function Accounts() {
           <CardContent className="flex-1 flex flex-col justify-between">
             <div className="mb-6">
               <p className="text-sm font-medium text-slate-500 mb-1">Available Balance</p>
-              <h3 className="text-3xl font-bold text-slate-900">$12,450.80</h3>
+              <h3 className="text-3xl font-bold text-slate-900">Rs. 12,450.80</h3>
               <p className="text-xs text-green-600 mt-1">4.5% APY</p>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-auto">
@@ -98,7 +98,7 @@ export function Accounts() {
           <CardContent className="flex-1 flex flex-col justify-between">
             <div className="mb-6">
               <p className="text-sm font-medium text-slate-500 mb-1">Principal Amount</p>
-              <h3 className="text-3xl font-bold text-slate-900">$25,000.00</h3>
+              <h3 className="text-3xl font-bold text-slate-900">Rs. 25,000.00</h3>
               <p className="text-xs text-slate-500 mt-1">Matures on Dec 15, 2026</p>
             </div>
             <div className="grid grid-cols-1 gap-2 mt-auto">

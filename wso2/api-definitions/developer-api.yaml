@@ -1,0 +1,67 @@
+openapi: 3.0.3
+info:
+  title: Developer Portal API
+  version: 1.0.0
+  description: Self-service APIs discovery, key generation, and analytics portal.
+servers:
+  - url: http://service-developer:3010/developer
+paths:
+  /apis:
+    get:
+      summary: View available published APIs catalog
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of APIs.
+  /key:
+    post:
+      summary: Generate API Key
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - applicationName
+              properties:
+                applicationName:
+                  type: string
+      responses:
+        '201':
+          description: API credentials generated.
+    delete:
+      summary: Revoke API Key
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - apiKey
+              properties:
+                apiKey:
+                  type: string
+      responses:
+        '200':
+          description: API key revoked.
+  /analytics:
+    get:
+      summary: View API analytics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Analytics traffic summaries.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,123 @@
+openapi: 3.0.3
+info:
+  title: Admin Service API
+  version: 1.0.0
+  description: Centralized operational management and monitoring console.
+servers:
+  - url: http://service-admin:3009/admin
+paths:
+  /dashboard:
+    get:
+      summary: Retrieve summary metrics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Summary metrics.
+  /customers:
+    get:
+      summary: Search customer records
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, LOCKED, SUSPENDED]
+        - name: kyc
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of customers.
+  /customer/freeze:
+    put:
+      summary: Freeze customer accounts
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customerId
+                - reason
+              properties:
+                customerId:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Accounts frozen.
+  /reports:
+    get:
+      summary: Generate business reports
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [transactions, customers, loans, revenue, fraud, cards, api]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [pdf, csv, excel]
+      responses:
+        '200':
+          description: File download attachment stream.
+  /audit:
+    get:
+      summary: Retrieve administrative audit logs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of logs.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

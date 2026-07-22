@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Card Service API
+  version: 1.0.0
+  description: Self-service credit and debit card controls.
+servers:
+  - url: http://service-card:3006/api/v1/cards
+paths:
+  /:
+    get:
+      summary: View customer cards
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of credit and debit cards.
+  /freeze:
+    put:
+      summary: Freeze card
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cardId
+              properties:
+                cardId:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Card frozen.
+  /unfreeze:
+    put:
+      summary: Unfreeze card
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cardId
+              properties:
+                cardId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Card reactivated.
+  /pin:
+    put:
+      summary: Change card PIN
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cardId
+                - currentPin
+                - newPin
+                - confirmPin
+              properties:
+                cardId:
+                  type: string
+                  format: uuid
+                currentPin:
+                  type: string
+                newPin:
+                  type: string
+                confirmPin:
+                  type: string
+      responses:
+        '200':
+          description: PIN updated.
+  /limit:
+    put:
+      summary: Update spending limits
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cardId
+                - dailyLimit
+                - atmLimit
+                - onlineLimit
+                - contactlessLimit
+              properties:
+                cardId:
+                  type: string
+                  format: uuid
+                dailyLimit:
+                  type: number
+                atmLimit:
+                  type: number
+                onlineLimit:
+                  type: number
+                contactlessLimit:
+                  type: number
+      responses:
+        '200':
+          description: Limits updated.
+  /settings:
+    put:
+      summary: Configure card settings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cardId
+                - onlinePayments
+                - internationalUsage
+              properties:
+                cardId:
+                  type: string
+                  format: uuid
+                onlinePayments:
+                  type: boolean
+                internationalUsage:
+                  type: boolean
+      responses:
+        '200':
+          description: Settings updated.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

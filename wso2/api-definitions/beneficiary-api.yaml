@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  title: Beneficiary Service API
+  version: 1.0.0
+  description: API for managing customer saved beneficiaries for money transfers.
+servers:
+  - url: http://service-beneficiary:3005/api/v1/beneficiaries
+paths:
+  /:
+    get:
+      summary: Retrieve saved beneficiaries
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of beneficiaries.
+    post:
+      summary: Add a new beneficiary
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nickname
+                - bankName
+                - accountNumber
+                - accountName
+              properties:
+                nickname:
+                  type: string
+                bankName:
+                  type: string
+                accountNumber:
+                  type: string
+                accountName:
+                  type: string
+      responses:
+        '201':
+          description: Beneficiary created.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

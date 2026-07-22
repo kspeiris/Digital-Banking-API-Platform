@@ -1,0 +1,52 @@
+openapi: 3.0.3
+info:
+  title: Customer Profile API
+  version: 1.0.0
+  description: API for managing customer profiles and KYC verifications.
+servers:
+  - url: http://service-customer:3002/api/v1/customers
+paths:
+  /me:
+    get:
+      summary: Retrieve authenticated user customer profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile details returned.
+    put:
+      summary: Update customer profile details
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - phone
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+                city:
+                  type: string
+                country:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

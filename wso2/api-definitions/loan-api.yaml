@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: Loan Service API
+  version: 1.0.0
+  description: API for managing the complete digital loan lifecycle.
+servers:
+  - url: http://service-loan:3007/api/v1/loans
+paths:
+  /:
+    get:
+      summary: View own loan history
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of submitted loan applications.
+    post:
+      summary: Submit a new loan application
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - loanType
+                - requestedAmount
+                - durationMonths
+                - monthlyIncome
+                - employmentType
+                - purpose
+              properties:
+                loanType:
+                  type: string
+                  enum: [PERSONAL, HOME, VEHICLE, EDUCATION]
+                requestedAmount:
+                  type: number
+                durationMonths:
+                  type: number
+                monthlyIncome:
+                  type: number
+                employmentType:
+                  type: string
+                purpose:
+                  type: string
+      responses:
+        '201':
+          description: Loan application submitted.
+  /{id}:
+    get:
+      summary: Retrieve complete loan details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed loan configuration.
+  /status/{id}:
+    get:
+      summary: Track own application status
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current loan status returned.
+  /upload:
+    post:
+      summary: Upload loan documents
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - loanId
+                - documentType
+                - file
+              properties:
+                loanId:
+                  type: string
+                  format: uuid
+                documentType:
+                  type: string
+                  enum: [NIC_FRONT, NIC_BACK, SALARY_SLIP, BANK_STATEMENT, EMPLOYMENT_LETTER]
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Document uploaded.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

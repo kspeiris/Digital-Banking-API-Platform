@@ -74,9 +74,9 @@ export function AdminTransactions() {
                     </TableCell>
                     <TableCell className="font-semibold">
                       {trx.amount > 0 ? (
-                        <span className="text-green-600">+{trx.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</span>
+                        <span className="text-green-600">+{trx.amount.toLocaleString('en-LK', { style: 'currency', currency: 'LKR' })}</span>
                       ) : (
-                        <span>{trx.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</span>
+                        <span>{trx.amount.toLocaleString('en-LK', { style: 'currency', currency: 'LKR' })}</span>
                       )}
                     </TableCell>
                     <TableCell>

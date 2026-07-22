@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  version: 1.0.0
+  description: API for bank account and statement operations.
+servers:
+  - url: http://service-account:3003/api/v1/accounts
+paths:
+  /:
+    get:
+      summary: Retrieve all accounts of authenticated customer
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of customer bank accounts.
+  /{id}:
+    get:
+      summary: Retrieve account details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed account parameters.
+  /{id}/statements:
+    get:
+      summary: Generate account statements
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: fromDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [json, pdf, excel]
+      responses:
+        '200':
+          description: Account statement file or JSON output.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

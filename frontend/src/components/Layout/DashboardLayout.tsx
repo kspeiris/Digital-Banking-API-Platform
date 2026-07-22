@@ -143,6 +143,10 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
     </div>
   );
 
+  if (!auth.getSession()) {
+    return null;
+  }
+
   return (
     <div className="flex h-screen w-full flex-col sm:flex-row bg-background font-sans text-foreground overflow-hidden">
       {/* Sidebar for desktop */}

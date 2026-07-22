@@ -35,7 +35,7 @@ export function LoanCalculator() {
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="principal">Loan Amount ($)</Label>
+            <Label htmlFor="principal">Loan Amount (LKR)</Label>
             <Input
               id="principal"
               type="number"
@@ -71,19 +71,19 @@ export function LoanCalculator() {
           <div className="flex justify-between items-center">
             <span className="text-sm text-slate-500 font-medium">Monthly Payment</span>
             <span className="text-xl font-bold text-blue-600">
-              ${emi ? emi.toFixed(2) : '0.00'}
+              Rs. {emi ? emi.toFixed(2) : '0.00'}
             </span>
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-slate-500">Total Interest</span>
             <span className="font-medium text-slate-900">
-              ${totalInterest > 0 ? totalInterest.toFixed(2) : '0.00'}
+              Rs. {totalInterest > 0 ? totalInterest.toFixed(2) : '0.00'}
             </span>
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-slate-500">Total Payment</span>
             <span className="font-medium text-slate-900">
-              ${totalPayment > 0 ? totalPayment.toFixed(2) : '0.00'}
+              Rs. {totalPayment > 0 ? totalPayment.toFixed(2) : '0.00'}
             </span>
           </div>
         </div>

@@ -45,11 +45,11 @@ export function Loans() {
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1">Remaining Balance</p>
-                <h3 className="text-2xl font-bold text-slate-900">$18,450.00</h3>
+                <h3 className="text-2xl font-bold text-slate-900">Rs. 18,450.00</h3>
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1">Next Payment (EMI)</p>
-                <h3 className="text-2xl font-bold text-slate-900">$450.00</h3>
+                <h3 className="text-2xl font-bold text-slate-900">Rs. 450.00</h3>
                 <p className="text-xs text-red-500 mt-1">Due in 5 days</p>
               </div>
             </div>
@@ -57,8 +57,8 @@ export function Loans() {
               <div className="bg-blue-500 h-full w-[45%]"></div>
             </div>
             <div className="flex justify-between text-xs text-slate-500">
-              <span>Paid: $15,000</span>
-              <span>Total: $33,450</span>
+              <span>Paid: Rs. 15,000</span>
+              <span>Total: Rs. 33,450</span>
             </div>
             <div className="mt-6">
               <Button className="w-full">Make a Payment</Button>

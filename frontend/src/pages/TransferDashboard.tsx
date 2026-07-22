@@ -50,8 +50,8 @@ export function TransferDashboard() {
                       <SelectValue placeholder="Select source account" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="checking">Checking (****1234) - $7,500.00</SelectItem>
-                      <SelectItem value="savings">Savings (****5678) - $12,450.00</SelectItem>
+                      <SelectItem value="checking">Checking (****1234) - Rs. 7,500.00</SelectItem>
+                      <SelectItem value="savings">Savings (****5678) - Rs. 12,450.00</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -68,7 +68,7 @@ export function TransferDashboard() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Amount (USD)</Label>
+                  <Label>Amount (LKR)</Label>
                   <Input type="number" min="0.01" step="0.01" placeholder="0.00" required />
                 </div>
                 <div className="space-y-2">
@@ -100,7 +100,7 @@ export function TransferDashboard() {
                       <SelectValue placeholder="Select source account" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="checking">Checking (****1234) - $7,500.00</SelectItem>
+                      <SelectItem value="checking">Checking (****1234) - Rs. 7,500.00</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -111,14 +111,14 @@ export function TransferDashboard() {
                       <SelectValue placeholder="Select beneficiary or add new" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="b1">John Doe (Chase Bank)</SelectItem>
-                      <SelectItem value="b2">Jane Smith (Bank of America)</SelectItem>
+                      <SelectItem value="b1">John Doe (Commercial Bank)</SelectItem>
+                      <SelectItem value="b2">Jane Smith (Sampath Bank)</SelectItem>
                       <SelectItem value="new">+ Add New Beneficiary</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Amount (USD)</Label>
+                  <Label>Amount (LKR)</Label>
                   <Input type="number" min="0.01" step="0.01" placeholder="0.00" required />
                 </div>
               </CardContent>
@@ -160,7 +160,7 @@ export function TransferDashboard() {
                 </div>
                 {/* Simplified form for demo */}
                 <div className="space-y-2">
-                  <Label>Amount (USD)</Label>
+                  <Label>Amount (LKR)</Label>
                   <Input type="number" min="0.01" step="0.01" placeholder="0.00" required />
                 </div>
               </CardContent>

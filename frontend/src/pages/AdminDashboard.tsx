@@ -38,7 +38,7 @@ export function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12.4M</div>
+            <div className="text-2xl font-bold">Rs. 12.4M</div>
             <p className="text-xs text-muted-foreground">+8% from yesterday</p>
           </CardContent>
         </Card>
