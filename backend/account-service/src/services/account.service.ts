@@ -43,9 +43,11 @@ export class AccountService {
         accountNumber: acc.accountNumber,
         accountType: acc.accountType.toUpperCase(),
         currency: acc.currency,
+        branch: acc.branch,
         balance: Number(acc.balance),
         availableBalance: Number(acc.availableBalance),
         status: acc.status,
+        createdAt: acc.createdAt.toISOString().split('T')[0],
       }));
     }
 

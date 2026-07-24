@@ -93,12 +93,15 @@ export class AccountRepository {
   }
 
   async calculateBalanceBeforeDate(accountId: string, beforeDate: Date): Promise<number> {
+    const account = await this.findAccountById(accountId);
+    if (!account) return 0;
+
     const sent = await prisma.transaction.aggregate({
       where: {
         fromAccountId: accountId,
         status: 'SUCCESS',
         createdAt: {
-          lt: beforeDate,
+          gte: beforeDate,
         },
       },
       _sum: {
@@ -112,7 +115,7 @@ export class AccountRepository {
         toAccountId: accountId,
         status: 'SUCCESS',
         createdAt: {
-          lt: beforeDate,
+          gte: beforeDate,
         },
       },
       _sum: {
@@ -123,6 +126,6 @@ export class AccountRepository {
     const totalSent = Number(sent._sum.amount || 0) + Number(sent._sum.fee || 0);
     const totalReceived = Number(received._sum.amount || 0);
 
-    return totalReceived - totalSent;
+    return Number(account.balance) - totalReceived + totalSent;
   }
 }

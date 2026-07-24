@@ -51,7 +51,7 @@ export class AdminController {
       const result = await this.customerService.searchCustomers(queryResult.data);
       res.json({
         success: true,
-        data: result.data,
+        data: result,
       });
     } catch (err) {
       next(err);

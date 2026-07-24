@@ -1,9 +1,9 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, UserPlus, Filter, MoreHorizontal } from 'lucide-react';
+import { Search, Filter, MoreHorizontal, Loader2, AlertCircle } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -13,16 +13,81 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-const MOCK_USERS = [
-  { id: '1', name: 'Alexander Pierce', email: 'alexander@example.com', status: 'active', joinDate: '2023-01-15', accounts: 3 },
-  { id: '2', name: 'Maria Garcia', email: 'maria.g@example.com', status: 'active', joinDate: '2023-03-22', accounts: 1 },
-  { id: '3', name: 'James Smith', email: 'jsmith@example.com', status: 'frozen', joinDate: '2022-11-05', accounts: 2 },
-  { id: '4', name: 'Emily Chen', email: 'echen99@example.com', status: 'active', joinDate: '2024-02-10', accounts: 4 },
-  { id: '5', name: 'Robert Johnson', email: 'rjohnson@example.com', status: 'pending', joinDate: '2024-05-18', accounts: 0 },
-];
+import { adminService, AdminCustomer } from '@/services/admin';
+import { toast } from 'sonner';
 
 export function Users() {
+  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [kycFilter, setKycFilter] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const limit = 10;
+
+  const loadCustomers = async () => {
+    setLoading(true);
+    try {
+      const res = await adminService.searchCustomers({
+        page,
+        limit,
+        search: searchTerm || undefined,
+        status: statusFilter || undefined,
+        kyc: kycFilter || undefined,
+      });
+      setCustomers(res.data);
+      setTotal(res.total);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to load customers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCustomers();
+  }, [page, statusFilter, kycFilter]);
+
+  // Debounce search
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      setPage(1);
+      loadCustomers();
+    }, 400);
+    return () => clearTimeout(delay);
+  }, [searchTerm]);
+
+  const handleFreeze = async (customer: AdminCustomer) => {
+    const reason = window.prompt(`Reason for freezing customer "${customer.name}":`);
+    if (reason === null) return; // User cancelled
+    if (!reason.trim()) {
+      toast.error('A reason is required to freeze account');
+      return;
+    }
+
+    const toastId = toast.loading('Freezing customer accounts...');
+    try {
+      await adminService.freezeCustomer(customer.customerId, reason);
+      toast.success('Accounts frozen successfully', { id: toastId });
+      loadCustomers();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to freeze accounts', { id: toastId });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'ACTIVE':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>;
+      case 'SUSPENDED':
+      case 'FROZEN':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Frozen</Badge>;
+      default:
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">{status}</Badge>;
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -30,99 +95,137 @@ export function Users() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Customer Management</h1>
           <p className="text-slate-500">View, manage, and monitor all bank customers.</p>
         </div>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" /> Add Customer
-        </Button>
       </div>
 
       <Card className="bg-white border-slate-200 shadow-sm">
         <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full sm:w-96">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search by name, email, or ID..."
+                placeholder="Search by name, email, or NIC..."
                 className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button variant="outline" className="w-full sm:w-auto">
-              <Filter className="mr-2 h-4 w-4" /> Filters
-            </Button>
+            
+            <div className="flex gap-2 w-full md:w-auto">
+              <select
+                value={statusFilter}
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                className="border border-slate-200 rounded px-3 py-1.5 text-sm bg-white outline-none"
+              >
+                <option value="">All Statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="SUSPENDED">Suspended</option>
+              </select>
+
+              <select
+                value={kycFilter}
+                onChange={(e) => { setKycFilter(e.target.value); setPage(1); }}
+                className="border border-slate-200 rounded px-3 py-1.5 text-sm bg-white outline-none"
+              >
+                <option value="">All KYC Status</option>
+                <option value="Verified">Verified</option>
+                <option value="PENDING">Pending</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Accounts</TableHead>
-                  <TableHead>Join Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {MOCK_USERS.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{user.name}</p>
-                        <p className="text-xs text-slate-500">{user.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          user.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 
-                          user.status === 'frozen' ? 'bg-red-50 text-red-700 border-red-200' :
-                          'bg-yellow-50 text-yellow-700 border-yellow-200'
-                        }
-                      >
-                        {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{user.accounts}</TableCell>
-                    <TableCell>{user.joinDate}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Transaction History</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {user.status === 'active' ? (
-                            <DropdownMenuItem className="text-red-600">Freeze Account</DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem className="text-green-600">Activate Account</DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            {loading ? (
+              <div className="flex h-40 items-center justify-center">
+                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+              </div>
+            ) : customers.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 flex flex-col items-center justify-center">
+                 <AlertCircle className="w-10 h-10 text-slate-400 mb-2" />
+                <p className="font-semibold text-slate-700">No customers found</p>
+                <p className="text-xs text-slate-400">Try modifying your filters or search term.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>KYC Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {customers.map((user) => (
+                    <TableRow key={user.customerId}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-slate-900">{user.name}</p>
+                          <p className="text-xs text-slate-500">{user.email}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(user.status)}
+                      </TableCell>
+                      <TableCell>
+                         <Badge variant="outline" className={user.kycStatus === 'Verified' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700'}>
+                          {user.kycStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {user.status === 'ACTIVE' ? (
+                              <DropdownMenuItem className="text-red-600 font-medium cursor-pointer" onClick={() => handleFreeze(user)}>
+                                Freeze Customer
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem className="text-slate-400 opacity-50 pointer-events-none" disabled>
+                                Account is Frozen
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
           
-          <div className="flex items-center justify-between space-x-2 py-4">
-            <div className="text-sm text-slate-500">
-              Showing 1 to 5 of 124 entries
+          {!loading && customers.length > 0 && (
+            <div className="flex items-center justify-between space-x-2 py-4">
+              <div className="text-sm text-slate-500">
+                Showing { (page - 1) * limit + 1 } to { Math.min(page * limit, total) } of { total } entries
+              </div>
+              <div className="space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page * limit >= total}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
-            <div className="space-x-2">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
