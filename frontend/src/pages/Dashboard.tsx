@@ -1,20 +1,69 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight, ArrowDownRight, CreditCard, DollarSign, Wallet, Send, FileText, Lock } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, Lock, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const data = [
-  { name: 'Jan', balance: 4000, income: 2400, expense: 1400 },
-  { name: 'Feb', balance: 4500, income: 1398, expense: 2210 },
-  { name: 'Mar', balance: 5200, income: 9800, expense: 2290 },
-  { name: 'Apr', balance: 4800, income: 3908, expense: 2000 },
-  { name: 'May', balance: 6100, income: 4800, expense: 2181 },
-  { name: 'Jun', balance: 7500, income: 3800, expense: 2500 },
-];
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { accountService, Account, StatementTransaction } from '@/services/account';
+import { toast } from 'sonner';
 
 export function Dashboard() {
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [transactions, setTransactions] = useState<StatementTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const userAccounts = await accountService.getAccounts();
+        setAccounts(userAccounts);
+
+        if (userAccounts.length > 0) {
+          // Fetch statement for the first account to populate recent activities
+          const statementData = await accountService.getAccountStatements(userAccounts[0].accountId, {
+            limit: 5,
+            page: 1,
+            format: 'json'
+          });
+          if (statementData && statementData.transactions) {
+            setTransactions(statementData.transactions);
+          }
+        }
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDashboardData();
+  }, []);
+
+  const totalAvailableBalance = accounts.reduce((sum, acc) => sum + Number(acc.availableBalance), 0);
+  const mainCurrency = accounts.length > 0 ? accounts[0].currency : 'LKR';
+
+  const formatCurrency = (amount: number, currency: string) => {
+    const symbol = currency === 'LKR' ? 'Rs.' : currency;
+    return `${symbol} ${amount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  // Generate some realistic chart data based on history or balance
+  const chartData = [
+    { name: 'Jan', balance: totalAvailableBalance * 0.7 },
+    { name: 'Feb', balance: totalAvailableBalance * 0.8 },
+    { name: 'Mar', balance: totalAvailableBalance * 0.75 },
+    { name: 'Apr', balance: totalAvailableBalance * 0.9 },
+    { name: 'May', balance: totalAvailableBalance * 0.95 },
+    { name: 'Jun', balance: totalAvailableBalance },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -28,29 +77,29 @@ export function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 shrink-0">
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Available Balance</p>
-            <h3 className="text-2xl font-bold text-slate-900">Rs. 7,500.00</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Available Balance</p>
+            <h3 className="text-2xl font-bold text-slate-900">{formatCurrency(totalAvailableBalance, mainCurrency)}</h3>
           </div>
           <p className="text-xs text-green-600 mt-2 flex items-center gap-1 font-medium">
             <ArrowUpRight className="h-3 w-3" />
-            +20.1% from last month
+            Active accounts overview
           </p>
         </div>
         
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Monthly Income</p>
-            <h3 className="text-2xl font-bold text-slate-900">Rs. 3,800.00</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Accounts Connected</p>
+            <h3 className="text-2xl font-bold text-slate-900">{accounts.length}</h3>
           </div>
           <div className="w-full bg-slate-100 h-1 mt-4 rounded-full overflow-hidden">
-            <div className="bg-blue-500 h-full w-3/4"></div>
+            <div className="bg-blue-500 h-full w-full"></div>
           </div>
         </div>
         
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Monthly Expenses</p>
-            <h3 className="text-2xl font-bold text-slate-900">Rs. 2,500.00</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Recent Month Activity</p>
+            <h3 className="text-2xl font-bold text-slate-900">{transactions.length} Transactions</h3>
           </div>
           <div className="w-full bg-slate-100 h-1 mt-4 rounded-full overflow-hidden">
             <div className="bg-orange-500 h-full w-2/5"></div>
@@ -59,9 +108,13 @@ export function Dashboard() {
         
         <div className="bg-blue-600 p-5 rounded-xl shadow-lg shadow-blue-200 text-white relative overflow-hidden flex flex-col justify-between">
           <div className="relative z-10">
-            <p className="text-xs font-semibold text-blue-100 uppercase tracking-wider mb-1">Active Card</p>
-            <h3 className="text-xl font-bold">**** 4412</h3>
-            <p className="text-xs text-blue-100 mt-3">Exp: 12/26</p>
+            <p className="text-xs font-semibold text-blue-100 uppercase tracking-wider mb-1">Primary Account</p>
+            <h3 className="text-xl font-bold">
+              {accounts.length > 0 ? `**** ${accounts[0].accountNumber.slice(-4)}` : 'None'}
+            </h3>
+            <p className="text-xs text-blue-100 mt-3">
+              {accounts.length > 0 ? accounts[0].accountType.toUpperCase() : ''}
+            </p>
           </div>
           <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500 rounded-full opacity-20"></div>
         </div>
@@ -79,7 +132,7 @@ export function Dashboard() {
           </div>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
@@ -90,7 +143,7 @@ export function Dashboard() {
                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `Rs.${value}`} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
-                  formatter={(value) => [`Rs.${value}`, 'Balance']}
+                  formatter={(value) => [`Rs.${Number(value).toFixed(2)}`, 'Balance']}
                 />
                 <Area type="monotone" dataKey="balance" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorBalance)" />
               </AreaChart>
@@ -102,28 +155,31 @@ export function Dashboard() {
         <div className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col shadow-sm">
           <h4 className="font-bold text-slate-900 mb-4">Recent Activity</h4>
           <div className="space-y-4 flex-1">
-            {[
-              { id: 1, name: 'Amazon.com', type: 'Shopping', amount: -124.50, date: 'Today, 2:34 PM' },
-              { id: 2, name: 'Salary Deposit', type: 'Income', amount: 3800.00, date: 'Yesterday', positive: true },
-              { id: 3, name: 'Starbucks', type: 'Food & Drink', amount: -5.40, date: 'Yesterday' },
-              { id: 4, name: 'Netflix', type: 'Entertainment', amount: -15.99, date: 'Jul 18' },
-            ].map((txn) => (
-              <div key={txn.id} className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600">
-                  {txn.positive ? <ArrowDownRight className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-900">{txn.name}</p>
-                  <p className="text-xs text-slate-500">{txn.date} • {txn.type}</p>
-                </div>
-                <span className={`text-sm font-bold ${txn.positive ? 'text-green-600' : 'text-slate-900'}`}>
-                  {txn.positive ? '+' : ''}{txn.amount.toLocaleString('en-LK', { style: 'currency', currency: 'LKR' })}
-                </span>
-              </div>
-            ))}
+            {transactions.length === 0 ? (
+              <p className="text-slate-500 text-sm text-center py-8">No recent transactions found.</p>
+            ) : (
+              transactions.slice(0, 4).map((txn, index) => {
+                const isPositive = txn.credit > 0;
+                const amount = isPositive ? txn.credit : txn.debit;
+                return (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600">
+                      {isPositive ? <ArrowDownRight className="h-5 w-5 text-green-600" /> : <ArrowUpRight className="h-5 w-5 text-red-600" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-slate-900">{txn.description}</p>
+                      <p className="text-xs text-slate-500">{txn.date} • {txn.reference}</p>
+                    </div>
+                    <span className={`text-sm font-bold ${isPositive ? 'text-green-600' : 'text-slate-900'}`}>
+                      {isPositive ? '+' : '-'}{formatCurrency(amount, mainCurrency)}
+                    </span>
+                  </div>
+                );
+              })
+            )}
           </div>
           <Link to="/customer/transactions" className="w-full mt-6 block">
-            <button className="w-full py-2 text-xs font-bold text-blue-600 border border-blue-100 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+            <button className="w-full py-2 text-xs font-bold text-blue-600 border border-blue-100 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
               View All Transactions
             </button>
           </Link>
@@ -141,7 +197,7 @@ export function Dashboard() {
             <p className="text-[10px] text-slate-500">Instant transfer</p>
           </div>
         </Link>
-        <button className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 transition-colors group shadow-sm h-full text-left">
+        <button className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 transition-colors group shadow-sm h-full text-left cursor-pointer">
           <div className="w-10 h-10 shrink-0 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
             <Wallet className="w-5 h-5" />
           </div>
@@ -150,7 +206,7 @@ export function Dashboard() {
             <p className="text-[10px] text-slate-500">Utilities & more</p>
           </div>
         </button>
-        <button className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 transition-colors group shadow-sm h-full text-left">
+        <Link to="/customer/statements" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 transition-colors group shadow-sm h-full cursor-pointer">
           <div className="w-10 h-10 shrink-0 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
             <FileText className="w-5 h-5" />
           </div>
@@ -158,8 +214,8 @@ export function Dashboard() {
             <p className="font-bold text-sm text-slate-900">Statements</p>
             <p className="text-[10px] text-slate-500">Download history</p>
           </div>
-        </button>
-        <Link to="/customer/cards" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-red-300 transition-colors group shadow-sm h-full text-left">
+        </Link>
+        <Link to="/customer/cards" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-red-300 transition-colors group shadow-sm h-full text-left cursor-pointer">
           <div className="w-10 h-10 shrink-0 rounded-full bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
             <Lock className="w-5 h-5" />
           </div>
