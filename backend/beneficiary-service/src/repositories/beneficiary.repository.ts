@@ -37,7 +37,7 @@ export class BeneficiaryRepository {
       where: {
         customerId,
         nickname: {
-          equals: nickname,
+          contains: nickname,
           mode: 'insensitive',
         },
       },

@@ -134,7 +134,7 @@ export class AuthService {
       throw new BadRequestException('OTP has expired or is invalid');
     }
 
-    if (purpose === 'REGISTRATION') {
+    if (purpose === 'REGISTRATION' || purpose === 'PASSWORD_RESET') {
       const user = await this.userRepository.findUserByEmail(email);
       if (user) {
         await this.userRepository.updateUserVerification(user.id, true);

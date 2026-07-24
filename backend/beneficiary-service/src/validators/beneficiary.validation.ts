@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const BeneficiaryIdParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid beneficiary ID format' }),
+  id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid beneficiary ID format' }),
 });
 
 export const AddBeneficiarySchema = z.object({
