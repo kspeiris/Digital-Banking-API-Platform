@@ -35,13 +35,9 @@ export function ForgotPassword() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // In reset password flow, verify-otp is done before password update.
-      // But wait: we can just check if verification succeeds in Zod, or verify-otp endpoint directly.
-      // We will call the backend verify-otp endpoint.
-      // Note: we can just let it proceed to step 3, because reset-password endpoint will verify OTP again anyway.
-      // So here we'll just transition to step 3.
+      await auth.verifyOtp(email, otp, 'PASSWORD_RESET');
       setIsLoading(false);
-      toast.success('OTP entered. Please proceed to set a new password.');
+      toast.success('OTP verified successfully! Please set your new password.');
       setStep(3);
     } catch (err: any) {
       setIsLoading(false);
