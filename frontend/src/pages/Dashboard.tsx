@@ -59,7 +59,10 @@ export function Dashboard() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-sm text-slate-500">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -75,38 +78,38 @@ export function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 shrink-0">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Available Balance</p>
             <h3 className="text-2xl font-bold text-slate-900">{formatCurrency(totalAvailableBalance, mainCurrency)}</h3>
           </div>
           <p className="text-xs text-green-600 mt-2 flex items-center gap-1 font-medium">
-            <ArrowUpRight className="h-3 w-3" />
+            <ArrowDownRight className="h-3 w-3" />
             Active accounts overview
           </p>
         </div>
         
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Accounts Connected</p>
             <h3 className="text-2xl font-bold text-slate-900">{accounts.length}</h3>
           </div>
           <div className="w-full bg-slate-100 h-1 mt-4 rounded-full overflow-hidden">
-            <div className="bg-blue-500 h-full w-full"></div>
+            <div className="bg-blue-500 h-full w-full transition-all duration-500"></div>
           </div>
         </div>
         
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Recent Month Activity</p>
             <h3 className="text-2xl font-bold text-slate-900">{transactions.length} Transactions</h3>
           </div>
           <div className="w-full bg-slate-100 h-1 mt-4 rounded-full overflow-hidden">
-            <div className="bg-orange-500 h-full w-2/5"></div>
+            <div className="bg-orange-500 h-full w-2/5 transition-all duration-500"></div>
           </div>
         </div>
         
-        <div className="bg-blue-600 p-5 rounded-xl shadow-lg shadow-blue-200 text-white relative overflow-hidden flex flex-col justify-between">
+        <div className="bg-blue-600 p-5 rounded-xl shadow-lg shadow-blue-200 text-white relative overflow-hidden flex flex-col justify-between hover:shadow-xl transition-all duration-200">
           <div className="relative z-10">
             <p className="text-xs font-semibold text-blue-100 uppercase tracking-wider mb-1">Primary Account</p>
             <h3 className="text-xl font-bold">
@@ -188,7 +191,7 @@ export function Dashboard() {
 
       {/* Bottom Quick Actions */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 shrink-0 lg:h-28">
-        <Link to="/customer/transfers" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 transition-colors group shadow-sm h-full cursor-pointer">
+        <Link to="/customer/transfers" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full cursor-pointer">
           <div className="w-10 h-10 shrink-0 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
             <Send className="w-5 h-5" />
           </div>
@@ -197,7 +200,7 @@ export function Dashboard() {
             <p className="text-[10px] text-slate-500">Instant transfer</p>
           </div>
         </Link>
-        <button className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 transition-colors group shadow-sm h-full text-left cursor-pointer">
+        <button className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full text-left cursor-pointer">
           <div className="w-10 h-10 shrink-0 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
             <Wallet className="w-5 h-5" />
           </div>
@@ -206,7 +209,7 @@ export function Dashboard() {
             <p className="text-[10px] text-slate-500">Utilities & more</p>
           </div>
         </button>
-        <Link to="/customer/statements" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 transition-colors group shadow-sm h-full cursor-pointer">
+        <Link to="/customer/statements" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full cursor-pointer">
           <div className="w-10 h-10 shrink-0 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
             <FileText className="w-5 h-5" />
           </div>
@@ -215,7 +218,7 @@ export function Dashboard() {
             <p className="text-[10px] text-slate-500">Download history</p>
           </div>
         </Link>
-        <Link to="/customer/cards" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-red-300 transition-colors group shadow-sm h-full text-left cursor-pointer">
+        <Link to="/customer/cards" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-red-300 hover:shadow-md transition-all group shadow-sm h-full text-left cursor-pointer">
           <div className="w-10 h-10 shrink-0 rounded-full bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
             <Lock className="w-5 h-5" />
           </div>
