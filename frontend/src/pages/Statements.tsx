@@ -102,7 +102,10 @@ export function Statements() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-sm text-slate-500">Loading accounts...</p>
+        </div>
       </div>
     );
   }
@@ -139,7 +142,7 @@ export function Statements() {
                   type="date"
                   value={fromDateStr}
                   onChange={(e) => setFromDateStr(e.target.value)}
-                  className="border border-slate-200 rounded px-2 py-1 text-sm bg-white outline-none"
+                  className="border border-slate-200 rounded px-2 py-1 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
 
@@ -149,7 +152,7 @@ export function Statements() {
                   type="date"
                   value={toDateStr}
                   onChange={(e) => setToDateStr(e.target.value)}
-                  className="border border-slate-200 rounded px-2 py-1 text-sm bg-white outline-none"
+                  className="border border-slate-200 rounded px-2 py-1 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
             </div>
