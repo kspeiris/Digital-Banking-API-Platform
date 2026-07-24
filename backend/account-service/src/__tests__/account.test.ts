@@ -60,6 +60,7 @@ describe('Account Service APIs', () => {
           balance: 1000.0,
           availableBalance: 950.0,
           status: 'ACTIVE',
+          createdAt: new Date('2026-01-01'),
         },
       ];
 
