@@ -7,17 +7,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { ArrowRightLeft, CalendarClock, Globe } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 export function TransferDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [transferType, setTransferType] = useState('');
 
   const handleTransfer = (e: React.FormEvent) => {
     e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const type = form.getAttribute('data-type') as string;
+    setTransferType(type);
+    setShowConfirm(true);
+  };
+
+  const confirmTransfer = async () => {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
+      setShowConfirm(false);
       toast.success('Transfer initiated successfully');
-      (e.target as HTMLFormElement).reset();
     }, 1500);
   };
 
@@ -41,7 +52,7 @@ export function TransferDashboard() {
               <CardTitle>Internal Transfer</CardTitle>
               <CardDescription>Transfer money between your own Nexus Banking accounts instantly.</CardDescription>
             </CardHeader>
-            <form onSubmit={handleTransfer}>
+            <form onSubmit={handleTransfer} data-type="Internal Transfer">
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>From Account</Label>
@@ -91,7 +102,7 @@ export function TransferDashboard() {
               <CardTitle>External Transfer</CardTitle>
               <CardDescription>Send money to other banks or saved beneficiaries.</CardDescription>
             </CardHeader>
-            <form onSubmit={handleTransfer}>
+            <form onSubmit={handleTransfer} data-type="External Transfer">
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>From Account</Label>
@@ -137,7 +148,7 @@ export function TransferDashboard() {
               <CardTitle>Scheduled Transfer</CardTitle>
               <CardDescription>Set up recurring or future-dated transfers.</CardDescription>
             </CardHeader>
-            <form onSubmit={handleTransfer}>
+            <form onSubmit={handleTransfer} data-type="Scheduled Transfer">
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -173,6 +184,16 @@ export function TransferDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title={`Confirm ${transferType}`}
+        description={`Are you sure you want to proceed with this ${transferType.toLowerCase()}? This action will initiate the transaction.`}
+        confirmLabel={isSubmitting ? 'Processing...' : 'Confirm'}
+        loading={isSubmitting}
+        onConfirm={confirmTransfer}
+      />
     </div>
   );
 }
