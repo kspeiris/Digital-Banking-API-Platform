@@ -51,7 +51,15 @@ export class TokenService {
       EX: 7 * 24 * 60 * 60,
     });
 
-    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        role: user.role.name,
+        email: user.email,
+      },
+    };
   }
 
   async revokeRefreshToken(refreshToken: string) {

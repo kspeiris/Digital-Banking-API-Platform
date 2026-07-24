@@ -82,10 +82,10 @@ export class AuthController {
   verifyOtp = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validatedData = verifyOtpSchema.parse(req.body);
-      await this.authService.verifyOtp(validatedData.email, validatedData.otp, 'REGISTRATION');
+      await this.authService.verifyOtp(validatedData.email, validatedData.otp, validatedData.purpose);
       res.json({
         success: true,
-        message: 'OTP verification successful. Email activated.',
+        message: 'OTP verification successful.',
       });
     } catch (err) {
       next(err);

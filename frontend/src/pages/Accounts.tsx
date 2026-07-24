@@ -47,7 +47,10 @@ export function Accounts() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-sm text-slate-500">Loading your accounts...</p>
+        </div>
       </div>
     );
   }
@@ -70,7 +73,7 @@ export function Accounts() {
           {accounts.map((account) => (
             <Card
               key={account.accountId}
-              className="bg-white border border-slate-200 shadow-sm flex flex-col hover:border-blue-300 transition-colors"
+              className="bg-white border border-slate-200 shadow-sm flex flex-col hover:border-blue-300 hover:shadow-md transition-all duration-200"
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -101,6 +104,7 @@ export function Accounts() {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate('/customer/transfers', { state: { sourceAccountId: account.accountId } })}
+                    className="transition-colors"
                   >
                     <ArrowRightLeft className="mr-2 h-4 w-4" /> Transfer
                   </Button>
@@ -108,6 +112,7 @@ export function Accounts() {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/customer/statements?accountId=${account.accountId}`)}
+                    className="transition-colors"
                   >
                     <FileText className="mr-2 h-4 w-4" /> Statement
                   </Button>

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShieldAlert, AlertTriangle, Search, CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { toast } from 'sonner';
 
 const MOCK_ALERTS = [
   { id: 'ALT-9921', user: 'Alice Smith', type: 'Unusual Login Location', risk: 'High', status: 'Pending', time: '10 mins ago' },
@@ -14,6 +16,25 @@ const MOCK_ALERTS = [
 ];
 
 export function FraudMonitoring() {
+  const [actionAlert, setActionAlert] = useState<typeof MOCK_ALERTS[0] | null>(null);
+  const [actionType, setActionType] = useState<'block' | 'clear' | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const handleAlertAction = async (alert: typeof MOCK_ALERTS[0], type: 'block' | 'clear') => {
+    setActionAlert(alert);
+    setActionType(type);
+  };
+
+  const confirmAction = async () => {
+    if (!actionAlert || !actionType) return;
+    setActionLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    toast.success(`Alert ${actionAlert.id} ${actionType === 'block' ? 'blocked' : 'cleared'} successfully`);
+    setActionLoading(false);
+    setActionAlert(null);
+    setActionType(null);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -60,7 +81,7 @@ export function FraudMonitoring() {
         </Card>
       </div>
 
-      <Card className="bg-white border-slate-200 shadow-sm">
+      <Card className="bg-white border border-slate-200 shadow-sm">
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             <CardTitle>Recent Alerts</CardTitle>
@@ -71,7 +92,7 @@ export function FraudMonitoring() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -106,10 +127,10 @@ export function FraudMonitoring() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right flex justify-end gap-2">
-                      <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                      <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleAlertAction(alert, 'block')}>
                         <XCircle className="h-4 w-4 mr-1" /> Block
                       </Button>
-                      <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50">
+                      <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleAlertAction(alert, 'clear')}>
                         <CheckCircle className="h-4 w-4 mr-1" /> Clear
                       </Button>
                     </TableCell>
@@ -120,6 +141,21 @@ export function FraudMonitoring() {
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={!!actionAlert}
+        onOpenChange={(open) => { if (!open) { setActionAlert(null); setActionType(null); } }}
+        title={actionType === 'block' ? 'Block User' : 'Clear Alert'}
+        description={
+          actionAlert
+            ? `Are you sure you want to ${actionType} alert ${actionAlert.id} for user ${actionAlert.user}?`
+            : ''
+        }
+        confirmLabel={actionType === 'block' ? 'Block' : 'Clear'}
+        variant={actionType === 'block' ? 'destructive' : 'default'}
+        loading={actionLoading}
+        onConfirm={confirmAction}
+      />
     </div>
   );
 }

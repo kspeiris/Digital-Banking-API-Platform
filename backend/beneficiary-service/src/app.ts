@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { logger, setServiceMeta } from 'shared-common';
+import { logger, setServiceMeta, requestIdMiddleware, morganMiddleware } from 'shared-common';
 import beneficiaryRouter from './routes/beneficiary.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 
@@ -8,6 +8,8 @@ setServiceMeta('beneficiary-service');
 
 const app = express();
 
+app.use(requestIdMiddleware);
+app.use(morganMiddleware);
 app.use(cors());
 app.use(express.json());
 

@@ -1,15 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Home, Car, GraduationCap, DollarSign, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 import { LoanCalculator } from '@/components/LoanCalculator';
 
 export function Loans() {
-  const handleApply = () => {
-    toast.info('Loan application workflow initiated.');
+  const [showApplyDialog, setShowApplyDialog] = useState(false);
+  const [applying, setApplying] = useState(false);
+
+  const handleApply = async () => {
+    setApplying(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setApplying(false);
+    setShowApplyDialog(false);
+    toast.success('Loan application workflow initiated.');
   };
 
   return (
@@ -19,7 +27,7 @@ export function Loans() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Loans</h1>
           <p className="text-slate-500">Manage your active loans and apply for new ones.</p>
         </div>
-        <Button onClick={handleApply}>
+        <Button onClick={() => setShowApplyDialog(true)}>
           <Plus className="mr-2 h-4 w-4" /> Apply for Loan
         </Button>
       </div>
@@ -96,6 +104,16 @@ export function Loans() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={showApplyDialog}
+        onOpenChange={setShowApplyDialog}
+        title="Apply for Loan"
+        description="You are about to start a new loan application. Please ensure you have all required documents ready."
+        confirmLabel={applying ? 'Submitting...' : 'Start Application'}
+        loading={applying}
+        onConfirm={handleApply}
+      />
     </div>
   );
 }

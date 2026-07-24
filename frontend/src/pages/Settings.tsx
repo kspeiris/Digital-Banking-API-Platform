@@ -6,10 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { customer, CustomerProfile } from '@/services/customer';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 export function Settings() {
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   // Edit Profile Form State
   const [formData, setFormData] = useState({
@@ -284,17 +286,42 @@ export function Settings() {
         </TabsContent>
 
         <TabsContent value="security">
-          <Card className="bg-white border-slate-200 shadow-sm">
+          <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Security Settings</CardTitle>
               <CardDescription>Manage your password and security settings.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-slate-400 text-sm">Security configurations and password resets are managed securely via OTP.</p>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <p className="font-medium text-slate-900">Password</p>
+                  <p className="text-sm text-slate-500">Change your account password</p>
+                </div>
+                <Button onClick={() => setShowPasswordDialog(true)}>Change Password</Button>
+              </div>
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <p className="font-medium text-slate-900">Two-Factor Authentication</p>
+                  <p className="text-sm text-slate-500">Add an extra layer of security</p>
+                </div>
+                <Button variant="outline">Enable 2FA</Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={showPasswordDialog}
+        onOpenChange={setShowPasswordDialog}
+        title="Change Password"
+        description="You will receive an OTP to verify your identity before changing your password."
+        confirmLabel="Send OTP"
+        onConfirm={() => {
+          setShowPasswordDialog(false);
+          toast.success('OTP sent to your email');
+        }}
+      />
     </div>
   );
 }

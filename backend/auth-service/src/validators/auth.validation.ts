@@ -28,6 +28,7 @@ export const forgotPasswordSchema = z.object({
 export const verifyOtpSchema = z.object({
   email: z.string().email('Invalid email address'),
   otp: z.string().length(6, 'OTP must be exactly 6 digits'),
+  purpose: z.enum(['REGISTRATION', 'PASSWORD_RESET']).optional().default('REGISTRATION'),
 });
 
 export const resetPasswordSchema = z.object({

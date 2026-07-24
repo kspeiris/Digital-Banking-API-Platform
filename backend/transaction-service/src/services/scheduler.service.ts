@@ -74,7 +74,7 @@ export class SchedulerService {
               fromAccountId: transfer.fromAccount,
               toAccountId: internalDestAccount.id,
               amount: Number(transfer.amount),
-              description: transfer.description || 'Scheduled Internal Transfer',
+              description: 'Scheduled Internal Transfer',
             }
           );
         } else {
@@ -84,7 +84,7 @@ export class SchedulerService {
               fromAccountId: transfer.fromAccount,
               beneficiaryId: transfer.beneficiaryId,
               amount: Number(transfer.amount),
-              description: transfer.description || 'Scheduled External Transfer',
+              description: 'Scheduled External Transfer',
             }
           );
         }

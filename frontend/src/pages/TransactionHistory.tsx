@@ -84,7 +84,7 @@ export function TransactionHistory() {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -104,7 +104,7 @@ export function TransactionHistory() {
                   </TableRow>
                 ) : (
                   filteredTransactions.map((tx) => (
-                    <TableRow key={tx.id}>
+                    <TableRow key={tx.id} className="transition-colors">
                       <TableCell className="whitespace-nowrap">{tx.date}</TableCell>
                       <TableCell>
                         <div className="font-medium">{tx.description}</div>

@@ -173,10 +173,10 @@ class AuthService {
     });
   }
 
-  public async verifyOtp(email: string, otp: string): Promise<any> {
+  public async verifyOtp(email: string, otp: string, purpose?: string): Promise<any> {
     return this.request('/verify-otp', {
       method: 'POST',
-      body: JSON.stringify({ email, otp }),
+      body: JSON.stringify({ email, otp, purpose }),
     });
   }
 

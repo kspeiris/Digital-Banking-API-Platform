@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const AccountIdParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid account ID format' }),
+  id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid account ID format' }),
 });
 
 export const StatementQuerySchema = z.object({
@@ -19,6 +19,9 @@ export const StatementQuerySchema = z.object({
     if (data.from && data.to) {
       const fromDate = new Date(data.from);
       const toDate = new Date(data.to);
+      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+        return false;
+      }
       return fromDate <= toDate;
     }
     return true;

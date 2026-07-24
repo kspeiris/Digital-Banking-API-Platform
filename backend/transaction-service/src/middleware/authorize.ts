@@ -4,7 +4,8 @@ import { ForbiddenException } from 'shared-common';
 
 export function authorize(roles: string[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    const user = req.user;
+    if (!user || !roles.some((role) => role.toLowerCase() === user.role.toLowerCase())) {
       return next(new ForbiddenException('You do not have permission to perform this action'));
     }
     next();

@@ -26,7 +26,10 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-sm text-slate-500">Loading admin metrics...</p>
+        </div>
       </div>
     );
   }
@@ -49,7 +52,7 @@ export function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-white border border-slate-200 shadow-sm">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Total Customers</CardTitle>
             <Users className="h-4 w-4 text-slate-400" />
@@ -60,7 +63,7 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-slate-200 shadow-sm">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Active Accounts</CardTitle>
             <Activity className="h-4 w-4 text-slate-400" />
@@ -71,7 +74,7 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-slate-200 shadow-sm">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Pending Loans</CardTitle>
             <FileText className="h-4 w-4 text-slate-400" />
@@ -82,7 +85,7 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-slate-200 shadow-sm">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Fraud Alerts</CardTitle>
             <ShieldAlert className={`h-4 w-4 ${(summary?.fraudAlerts || 0) > 0 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />
@@ -97,7 +100,7 @@ export function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="bg-white border border-slate-200 shadow-sm lg:col-span-2">
+        <Card className="bg-white border border-slate-200 shadow-sm lg:col-span-2 hover:shadow-md transition-all duration-200">
           <CardHeader>
             <CardTitle>Platform Activity</CardTitle>
             <p className="text-slate-500 text-xs">Transaction count processed over the last 7 days.</p>
@@ -122,7 +125,7 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-slate-200 shadow-sm">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
           <CardHeader>
             <CardTitle>System Properties</CardTitle>
             <p className="text-slate-500 text-xs font-semibold">General platform diagnostics.</p>
