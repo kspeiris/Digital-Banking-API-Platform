@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileBarChart } from 'lucide-react';
+import { Download, FileBarChart, Eye } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { adminService } from '@/services/admin';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 export function Reports() {
   const [txnPeriod, setTxnPeriod] = useState('today');
   const [userPeriod, setUserPeriod] = useState('thisMonth');
   const [loanPeriod, setLoanPeriod] = useState('q2');
+  const [generating, setGenerating] = useState(false);
+  const [previewReport, setPreviewReport] = useState<{ type: string; format: string; period: string } | null>(null);
 
   const getDatesFromPeriod = (period: string) => {
     const to = new Date().toISOString();
@@ -50,6 +53,7 @@ export function Reports() {
   };
 
   const handleGenerateReport = async (type: string, format: string, period: string) => {
+    setGenerating(true);
     const toastId = toast.loading(`Generating ${type} report...`);
     try {
       const { from, to } = getDatesFromPeriod(period);
@@ -64,7 +68,7 @@ export function Reports() {
       const link = document.createElement('a');
       link.href = url;
       
-      const ext = format === 'pdf' ? 'pdf' : 'csv';
+      const ext = format === 'pdf' ? 'pdf' : format === 'excel' ? 'xlsx' : 'csv';
       link.setAttribute('download', `${type}_report_${period}.${ext}`);
       
       document.body.appendChild(link);
@@ -74,7 +78,13 @@ export function Reports() {
       toast.success(`${type.toUpperCase()} report generated successfully`, { id: toastId });
     } catch (err: any) {
       toast.error(err.message || 'Failed to generate report', { id: toastId });
+    } finally {
+      setGenerating(false);
     }
+  };
+
+  const handlePreview = (type: string, format: string, period: string) => {
+    setPreviewReport({ type, format, period });
   };
 
   return (
@@ -108,6 +118,9 @@ export function Reports() {
             <Button className="w-full" onClick={() => handleGenerateReport('transactions', 'csv', txnPeriod)}>
               <Download className="mr-2 h-4 w-4" /> Generate CSV
             </Button>
+            <Button variant="outline" className="w-full" onClick={() => handlePreview('transactions', 'csv', txnPeriod)}>
+              <Eye className="mr-2 h-4 w-4" /> Preview
+            </Button>
           </CardContent>
         </Card>
 
@@ -132,6 +145,9 @@ export function Reports() {
             </Select>
             <Button className="w-full" onClick={() => handleGenerateReport('customers', 'pdf', userPeriod)}>
               <Download className="mr-2 h-4 w-4" /> Generate PDF
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => handlePreview('customers', 'pdf', userPeriod)}>
+              <Eye className="mr-2 h-4 w-4" /> Preview
             </Button>
           </CardContent>
         </Card>
@@ -159,9 +175,26 @@ export function Reports() {
             <Button className="w-full" onClick={() => handleGenerateReport('loans', 'csv', loanPeriod)}>
               <Download className="mr-2 h-4 w-4" /> Generate CSV
             </Button>
+            <Button variant="outline" className="w-full" onClick={() => handlePreview('loans', 'csv', loanPeriod)}>
+              <Eye className="mr-2 h-4 w-4" /> Preview
+            </Button>
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={!!previewReport}
+        onOpenChange={(open) => !open && setPreviewReport(null)}
+        title="Report Preview"
+        description={
+          previewReport
+            ? `You are about to preview the ${previewReport.type} report for the selected period in ${previewReport.format.toUpperCase()} format.`
+            : undefined
+        }
+        confirmLabel="Download"
+        loading={generating}
+        onConfirm={() => previewReport && handleGenerateReport(previewReport.type, previewReport.format, previewReport.period)}
+      />
     </div>
   );
 }
