@@ -1,22 +1,87 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileBarChart, Filter } from 'lucide-react';
+import { Download, FileBarChart } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { adminService } from '@/services/admin';
+import { toast } from 'sonner';
 
 export function Reports() {
+  const [txnPeriod, setTxnPeriod] = useState('today');
+  const [userPeriod, setUserPeriod] = useState('thisMonth');
+  const [loanPeriod, setLoanPeriod] = useState('q2');
+
+  const getDatesFromPeriod = (period: string) => {
+    const to = new Date().toISOString();
+    let from = new Date();
+    
+    switch (period) {
+      case 'today':
+        from.setHours(0, 0, 0, 0);
+        break;
+      case 'yesterday':
+        from.setDate(from.getDate() - 1);
+        from.setHours(0, 0, 0, 0);
+        break;
+      case 'last7':
+        from.setDate(from.getDate() - 7);
+        break;
+      case 'thisMonth':
+        from.setDate(1);
+        break;
+      case 'thisWeek':
+        from.setDate(from.getDate() - from.getDay());
+        break;
+      case 'thisYear':
+        from.setMonth(0, 1);
+        break;
+      case 'q1':
+        return { from: '2026-01-01T00:00:00.000Z', to: '2026-03-31T23:59:59.000Z' };
+      case 'q2':
+        return { from: '2026-04-01T00:00:00.000Z', to: '2026-06-30T23:59:59.000Z' };
+      case 'q3':
+        return { from: '2026-07-01T00:00:00.000Z', to: '2026-09-30T23:59:59.000Z' };
+      case 'q4':
+        return { from: '2026-10-01T00:00:00.000Z', to: '2026-12-31T23:59:59.000Z' };
+      default:
+        break;
+    }
+    return { from: from.toISOString(), to };
+  };
+
+  const handleGenerateReport = async (type: string, format: string, period: string) => {
+    const toastId = toast.loading(`Generating ${type} report...`);
+    try {
+      const { from, to } = getDatesFromPeriod(period);
+      const blob = await adminService.generateReport({
+        type,
+        format,
+        from,
+        to
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const ext = format === 'pdf' ? 'pdf' : 'csv';
+      link.setAttribute('download', `${type}_report_${period}.${ext}`);
+      
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      
+      toast.success(`${type.toUpperCase()} report generated successfully`, { id: toastId });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to generate report', { id: toastId });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-5xl">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Reports & Analytics</h1>
-          <p className="text-slate-500">Generate and download platform performance reports.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Filter className="mr-2 h-4 w-4" /> Filter
-          </Button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Reports & Analytics</h1>
+        <p className="text-slate-500">Generate and download platform performance reports from live data.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -29,7 +94,7 @@ export function Reports() {
             <CardDescription>Aggregate volume and count of all transactions processed.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select defaultValue="today">
+            <Select value={txnPeriod} onValueChange={setTxnPeriod}>
               <SelectTrigger>
                 <SelectValue placeholder="Period" />
               </SelectTrigger>
@@ -40,7 +105,7 @@ export function Reports() {
                 <SelectItem value="thisMonth">This Month</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="w-full">
+            <Button className="w-full" onClick={() => handleGenerateReport('transactions', 'csv', txnPeriod)}>
               <Download className="mr-2 h-4 w-4" /> Generate CSV
             </Button>
           </CardContent>
@@ -55,7 +120,7 @@ export function Reports() {
             <CardDescription>New account registrations and active user metrics.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select defaultValue="thisMonth">
+            <Select value={userPeriod} onValueChange={setUserPeriod}>
               <SelectTrigger>
                 <SelectValue placeholder="Period" />
               </SelectTrigger>
@@ -65,7 +130,7 @@ export function Reports() {
                 <SelectItem value="thisYear">This Year</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="w-full">
+            <Button className="w-full" onClick={() => handleGenerateReport('customers', 'pdf', userPeriod)}>
               <Download className="mr-2 h-4 w-4" /> Generate PDF
             </Button>
           </CardContent>
@@ -80,7 +145,7 @@ export function Reports() {
             <CardDescription>Status and volume of new loan applications.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select defaultValue="q2">
+            <Select value={loanPeriod} onValueChange={setLoanPeriod}>
               <SelectTrigger>
                 <SelectValue placeholder="Period" />
               </SelectTrigger>
@@ -91,8 +156,8 @@ export function Reports() {
                 <SelectItem value="q4">Q4 2026</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="w-full">
-              <Download className="mr-2 h-4 w-4" /> Generate Excel
+            <Button className="w-full" onClick={() => handleGenerateReport('loans', 'csv', loanPeriod)}>
+              <Download className="mr-2 h-4 w-4" /> Generate CSV
             </Button>
           </CardContent>
         </Card>
