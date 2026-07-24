@@ -150,7 +150,7 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
   return (
     <div className="flex h-screen w-full flex-col sm:flex-row bg-background font-sans text-foreground overflow-hidden">
       {/* Sidebar for desktop */}
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col bg-slate-900 shrink-0 sm:flex sm:static">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-slate-900 shrink-0 sm:flex sm:static">
         <div className="p-6 flex items-center gap-3">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white">
@@ -159,7 +159,7 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
             <span className="text-white font-semibold text-lg tracking-tight">DigitalBank</span>
           </Link>
         </div>
-        <div className="flex-1 overflow-auto px-4 py-2">
+        <div className="flex-1 overflow-y-auto px-4 py-2 scrollbar-thin">
           <nav className="flex-1 space-y-1">
             <div className="mb-4 mt-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
               {role === 'customer' ? 'Main Menu' : role === 'admin' ? 'Admin Panel' : 'Dev Portal'}
@@ -228,8 +228,10 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
         </header>
         
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col p-4 sm:p-8 overflow-y-auto">
-          <Outlet />
+        <main className="flex-1 flex flex-col p-4 sm:p-8 overflow-y-auto scroll-smooth">
+          <div className="mx-auto w-full max-w-7xl">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
