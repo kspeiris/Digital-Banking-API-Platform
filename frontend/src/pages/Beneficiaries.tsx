@@ -198,7 +198,7 @@ export function Beneficiaries() {
               </div>
             ) : filteredBeneficiaries.length === 0 ? (
               <div className="text-center py-12 text-slate-500 flex flex-col items-center justify-center">
-                <AlertCircle className="w-10 h-10 text-slate-350 mb-2" />
+                <AlertCircle className="w-10 h-10 text-slate-400 mb-2" />
                 <p className="font-semibold text-slate-700">No beneficiaries found</p>
                 <p className="text-xs text-slate-400">Add a contact to get started.</p>
               </div>
@@ -247,7 +247,7 @@ export function Beneficiaries() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-650 cursor-pointer" onClick={() => handleOpenDeleteDialog(ben)}>
+                              <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={() => handleOpenDeleteDialog(ben)}>
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
