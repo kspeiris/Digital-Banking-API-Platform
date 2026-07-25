@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { customerController } from '../controllers/customer.controller';
 import { authMiddleware } from 'shared-common';
+import { authorize } from '../middleware/authorize';
 import { uploadProfile, uploadKyc } from '../config/storage';
 
 const router = Router();
 
-// Apply auth middleware globally to all customer endpoints
 router.use(authMiddleware);
 
 router.get('/me', customerController.getProfile);
@@ -28,6 +28,6 @@ router.post(
   customerController.submitKyc
 );
 
-router.get('/:id', customerController.getCustomerById);
+router.get('/:id', authorize(['ADMIN']), customerController.getCustomerById);
 
 export default router;
