@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { TransactionType, TransactionStatus } from '@prisma/client';
 
 export const TransactionIdParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid transaction ID format' }),
+  id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid transaction ID format' }),
 });
 
 export const InternalTransferSchema = z.object({
-  fromAccountId: z.string().uuid({ message: 'Invalid source account ID' }),
-  toAccountId: z.string().uuid({ message: 'Invalid destination account ID' }),
+  fromAccountId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid source account ID' }),
+  toAccountId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid destination account ID' }),
   amount: z.number().positive({ message: 'Amount must be greater than 0' }),
   description: z.string().max(255).optional(),
 }).refine(
@@ -19,15 +19,15 @@ export const InternalTransferSchema = z.object({
 );
 
 export const ExternalTransferSchema = z.object({
-  fromAccountId: z.string().uuid({ message: 'Invalid source account ID' }),
-  beneficiaryId: z.string().uuid({ message: 'Invalid beneficiary ID' }),
+  fromAccountId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid source account ID' }),
+  beneficiaryId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid beneficiary ID' }),
   amount: z.number().positive({ message: 'Amount must be greater than 0' }),
   description: z.string().max(255).optional(),
 });
 
 export const ScheduledTransferSchema = z.object({
-  fromAccountId: z.string().uuid({ message: 'Invalid source account ID' }),
-  beneficiaryId: z.string().uuid({ message: 'Invalid beneficiary ID' }),
+  fromAccountId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid source account ID' }),
+  beneficiaryId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid beneficiary ID' }),
   amount: z.number().positive({ message: 'Amount must be greater than 0' }),
   transferDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
     message: 'transferDate must be in YYYY-MM-DD format',
