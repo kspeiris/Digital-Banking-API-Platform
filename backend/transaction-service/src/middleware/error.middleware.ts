@@ -11,14 +11,14 @@ export function errorMiddleware(
   let status = error instanceof HttpException ? error.status : 500;
   let message = error.message || 'Something went wrong';
 
-  if (error.name === 'ZodError' || error.issues) {
+  if (error.name === 'ZodError' || (error as any).issues) {
     status = 400;
-    if (error.issues) {
-      message = error.issues.map((issue: any) => `${issue.path.join('.')}: ${issue.message}`).join(', ');
+    if ((error as any).issues) {
+      message = (error as any).issues.map((issue: any) => `${issue.path?.join('.') || ''}: ${issue.message}`).join(', ');
     } else {
       try {
         const parsed = JSON.parse(error.message);
-        message = parsed.map((p: any) => `${p.path.join('.')}: ${p.message}`).join(', ');
+        message = parsed.map((p: any) => `${p.path?.join('.') || ''}: ${p.message}`).join(', ');
       } catch {
         message = 'Validation failed';
       }

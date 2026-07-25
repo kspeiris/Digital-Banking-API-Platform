@@ -167,7 +167,7 @@ export function Users() {
               </div>
             ) : customers.length === 0 ? (
               <div className="text-center py-12 text-slate-500 flex flex-col items-center justify-center">
-                <AlertCircle className="w-10 h-10 text-slate-350 mb-2" />
+                <AlertCircle className="w-10 h-10 text-slate-400 mb-2" />
                 <p className="font-semibold text-slate-700">No customers found</p>
                 <p className="text-xs text-slate-400">Try modifying your filters or search term.</p>
               </div>
@@ -194,7 +194,7 @@ export function Users() {
                         {getStatusBadge(user.status)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={user.kycStatus === 'Verified' ? 'bg-green-50 text-green-700 border-green-150' : 'bg-yellow-50 text-yellow-700'}>
+                        <Badge variant="outline" className={user.kycStatus === 'Verified' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700'}>
                           {user.kycStatus}
                         </Badge>
                       </TableCell>
@@ -208,7 +208,7 @@ export function Users() {
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {user.status === 'ACTIVE' ? (
-                              <DropdownMenuItem className="text-red-650 font-medium cursor-pointer" onClick={() => handleOpenFreezeDialog(user)}>
+                              <DropdownMenuItem className="text-red-600 font-medium cursor-pointer" onClick={() => handleOpenFreezeDialog(user)}>
                                 Freeze Customer
                               </DropdownMenuItem>
                             ) : (
@@ -280,7 +280,7 @@ export function Users() {
               <Button type="button" variant="outline" onClick={() => setFreezeDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={freezing} className="bg-red-600 hover:bg-red-750 text-white">
+              <Button type="submit" disabled={freezing} className="bg-red-600 hover:bg-red-700 text-white">
                 {freezing ? 'Freezing...' : 'Freeze Account'}
               </Button>
             </DialogFooter>

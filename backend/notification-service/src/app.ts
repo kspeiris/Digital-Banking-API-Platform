@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { logger, setServiceMeta } from 'shared-common';
+import { logger, setServiceMeta, requestIdMiddleware, morganMiddleware } from 'shared-common';
 import notificationRouter from './routes/notification.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 
@@ -8,6 +8,8 @@ setServiceMeta('notification-service');
 
 const app = express();
 
+app.use(requestIdMiddleware);
+app.use(morganMiddleware);
 app.use(cors());
 app.use(express.json());
 

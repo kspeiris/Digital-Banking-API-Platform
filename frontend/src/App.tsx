@@ -23,6 +23,7 @@ import { DevPortal } from '@/pages/DevPortal';
 import { ApiDocs } from '@/pages/ApiDocs';
 import { ApiKeys } from '@/pages/ApiKeys';
 import { ApiAnalytics } from '@/pages/ApiAnalytics';
+import { Notifications } from '@/pages/Notifications';
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="beneficiaries" element={<Beneficiaries />} />
           <Route path="statements" element={<Statements />} />
+          <Route path="notifications" element={<Notifications />} />
           {/* Catch-all customer route redirects to dashboard */}
           <Route path="*" element={<Navigate to="/customer" replace />} />
         </Route>

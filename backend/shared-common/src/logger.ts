@@ -63,5 +63,5 @@ export const logger = winston.createLogger({
 });
 
 export function setServiceMeta(serviceName: string) {
-  logger.defaultMeta = { service: serviceName };
+  Object.assign(logger.defaultMeta, { service: serviceName });
 }

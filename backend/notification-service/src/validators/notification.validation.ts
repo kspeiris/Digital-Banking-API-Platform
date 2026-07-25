@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
 export const DeleteParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid notification ID format' }),
+  id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid notification ID format' }),
 });
 
 export const MarkReadSchema = z.object({
-  notificationIds: z.array(z.string().uuid({ message: 'Invalid notification ID format' })).min(1, {
+  notificationIds: z.array(z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid notification ID format' })).min(1, {
     message: 'At least one notification ID is required',
   }),
 });
