@@ -3,3 +3,16 @@ dist/
 .env*
 .DS_Store
 *.log
+node_modules
+dist
+build
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.log
+logs/
+dump.rdb
+playwright-report/
+.vscode/
+.idea/
