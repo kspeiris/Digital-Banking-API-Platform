@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const LoanIdParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid loan ID format' }),
+  id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid loan ID format' }),
 });
 
 export const ApplyLoanSchema = z.object({
@@ -16,7 +16,7 @@ export const ApplyLoanSchema = z.object({
 });
 
 export const UploadDocParamSchema = z.object({
-  loanId: z.string().uuid({ message: 'Invalid loan ID format' }),
+  loanId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid loan ID format' }),
   documentType: z.enum(
     ['NIC_FRONT', 'NIC_BACK', 'SALARY_SLIP', 'BANK_STATEMENT', 'EMPLOYMENT_LETTER'],
     { message: 'Invalid or unsupported document type' }
