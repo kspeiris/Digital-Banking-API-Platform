@@ -80,23 +80,24 @@ export class CardService {
         data: { status: CardStatus.FROZEN },
       });
 
-      // Notification
-      await tx.notification.create({
-        data: {
-          userId: card.account.customer.userId,
-          title: 'Card Frozen',
-          message: `Your card ending in ${card.cardNumber.slice(-4)} has been frozen. Reason: ${reason || 'User requested'}.`,
-        },
-      });
+      const customerUserId = card.account?.customer?.userId;
+      if (customerUserId) {
+        await tx.notification.create({
+          data: {
+            userId: customerUserId,
+            title: 'Card Frozen',
+            message: `Your card ending in ${card.cardNumber.slice(-4)} has been frozen. Reason: ${reason || 'User requested'}.`,
+          },
+        });
 
-      // Audit Log
-      await tx.auditLog.create({
-        data: {
-          userId: card.account.customer.userId,
-          action: 'CARD_FREEZE',
-          module: 'CARD',
-        },
-      });
+        await tx.auditLog.create({
+          data: {
+            userId: customerUserId,
+            action: 'CARD_FREEZE',
+            module: 'CARD',
+          },
+        });
+      }
     });
   }
 
@@ -112,23 +113,24 @@ export class CardService {
         data: { status: CardStatus.ACTIVE },
       });
 
-      // Notification
-      await tx.notification.create({
-        data: {
-          userId: card.account.customer.userId,
-          title: 'Card Unfrozen',
-          message: `Your card ending in ${card.cardNumber.slice(-4)} has been reactivated.`,
-        },
-      });
+      const customerUserId = card.account?.customer?.userId;
+      if (customerUserId) {
+        await tx.notification.create({
+          data: {
+            userId: customerUserId,
+            title: 'Card Unfrozen',
+            message: `Your card ending in ${card.cardNumber.slice(-4)} has been reactivated.`,
+          },
+        });
 
-      // Audit Log
-      await tx.auditLog.create({
-        data: {
-          userId: card.account.customer.userId,
-          action: 'CARD_UNFREEZE',
-          module: 'CARD',
-        },
-      });
+        await tx.auditLog.create({
+          data: {
+            userId: customerUserId,
+            action: 'CARD_UNFREEZE',
+            module: 'CARD',
+          },
+        });
+      }
     });
   }
 
@@ -153,23 +155,24 @@ export class CardService {
         },
       });
 
-      // Notification
-      await tx.notification.create({
-        data: {
-          userId: card.account.customer.userId,
-          title: 'Card Settings Updated',
-          message: `Settings for card ending in ${card.cardNumber.slice(-4)} have been updated.`,
-        },
-      });
+      const customerUserId = card.account?.customer?.userId;
+      if (customerUserId) {
+        await tx.notification.create({
+          data: {
+            userId: customerUserId,
+            title: 'Card Settings Updated',
+            message: `Settings for card ending in ${card.cardNumber.slice(-4)} have been updated.`,
+          },
+        });
 
-      // Audit Log
-      await tx.auditLog.create({
-        data: {
-          userId: card.account.customer.userId,
-          action: 'CARD_SETTINGS_UPDATE',
-          module: 'CARD',
-        },
-      });
+        await tx.auditLog.create({
+          data: {
+            userId: customerUserId,
+            action: 'CARD_SETTINGS_UPDATE',
+            module: 'CARD',
+          },
+        });
+      }
     });
   }
 
@@ -200,23 +203,24 @@ export class CardService {
         data: { cvvHash: hashedPin },
       });
 
-      // Notification
-      await tx.notification.create({
-        data: {
-          userId: card.account.customer.userId,
-          title: 'Card PIN Updated',
-          message: `The security PIN for your card ending in ${card.cardNumber.slice(-4)} has been changed.`,
-        },
-      });
+      const customerUserId = card.account?.customer?.userId;
+      if (customerUserId) {
+        await tx.notification.create({
+          data: {
+            userId: customerUserId,
+            title: 'Card PIN Updated',
+            message: `The security PIN for your card ending in ${card.cardNumber.slice(-4)} has been changed.`,
+          },
+        });
 
-      // Audit Log
-      await tx.auditLog.create({
-        data: {
-          userId: card.account.customer.userId,
-          action: 'CARD_PIN_CHANGE',
-          module: 'CARD',
-        },
-      });
+        await tx.auditLog.create({
+          data: {
+            userId: customerUserId,
+            action: 'CARD_PIN_CHANGE',
+            module: 'CARD',
+          },
+        });
+      }
     });
   }
 }
