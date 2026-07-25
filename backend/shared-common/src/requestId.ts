@@ -1,11 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 export function requestIdMiddleware(req: Request, res: Response, next: NextFunction) {
-  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const randomStr = crypto.randomBytes(3).toString('hex').toUpperCase();
-  const requestId = `REQ-${dateStr}-${randomStr}`;
-  
+  const requestId = uuidv4();
   req.headers['x-request-id'] = requestId;
   res.setHeader('X-Request-Id', requestId);
   next();
