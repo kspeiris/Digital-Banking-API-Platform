@@ -104,7 +104,7 @@ export function Statements() {
       <div className="flex h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-sm text-slate-500">Loading accounts...</p>
+          <p className="text-sm text-muted-foreground">Loading accounts...</p>
         </div>
       </div>
     );
@@ -114,45 +114,52 @@ export function Statements() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Statements & Documents</h1>
-          <p className="text-slate-500">Download your monthly account statements and tax documents.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Statements & Documents</h1>
+          <p className="text-muted-foreground">Download your monthly account statements and tax documents.</p>
         </div>
       </div>
 
-      <Card className="bg-white border border-slate-200 shadow-sm">
-        <CardHeader className="border-b bg-slate-50">
+      <Card className="bg-background border border-border shadow-sm">
+        <CardHeader className="border-b bg-muted">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex flex-wrap gap-4 w-full md:w-auto">
               <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                <SelectTrigger className="w-[240px]">
+                <SelectTrigger className="w-[280px]">
                   <SelectValue placeholder="Select Account" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((acc) => (
-                    <SelectItem key={acc.accountId} value={acc.accountId}>
-                      {acc.accountType.toUpperCase()} (**** {acc.accountNumber.slice(-4)})
-                    </SelectItem>
-                  ))}
+                  {accounts.map((acc) => {
+                    const typeName = acc.accountType.charAt(0) + acc.accountType.slice(1).toLowerCase();
+                    const last4 = acc.accountNumber.slice(-4);
+                    const balance = acc.availableBalance?.toLocaleString('en-LK', { minimumFractionDigits: 2 });
+                    const statusFlag = acc.status.toUpperCase() !== 'ACTIVE' ? ` [⚠ ${acc.status}]` : '';
+                    const label = `${typeName} • ****${last4} — ${acc.currency} ${balance}${statusFlag}`;
+                    return (
+                      <SelectItem key={acc.accountId} value={acc.accountId}>
+                        {label}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">From:</span>
+                <span className="text-xs text-muted-foreground">From:</span>
                 <input
                   type="date"
                   value={fromDateStr}
                   onChange={(e) => setFromDateStr(e.target.value)}
-                  className="border border-slate-200 rounded px-2 py-1 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="border border-border rounded px-2 py-1 text-sm bg-background outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">To:</span>
+                <span className="text-xs text-muted-foreground">To:</span>
                 <input
                   type="date"
                   value={toDateStr}
                   onChange={(e) => setToDateStr(e.target.value)}
-                  className="border border-slate-200 rounded px-2 py-1 text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="border border-border rounded px-2 py-1 text-sm bg-background outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
             </div>
@@ -173,16 +180,16 @@ export function Statements() {
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
           ) : transactions.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-muted-foreground">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="font-medium text-slate-700">No transactions in this period</p>
-              <p className="text-xs text-slate-400 mt-1">Try expanding the date range.</p>
+              <p className="font-medium text-foreground">No transactions in this period</p>
+              <p className="text-xs text-muted-foreground mt-1">Try expanding the date range.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-600 font-semibold">
+                  <tr className="bg-muted border-b border-slate-100 text-muted-foreground font-semibold">
                     <th className="p-4">Date</th>
                     <th className="p-4">Reference</th>
                     <th className="p-4">Description</th>
@@ -191,9 +198,9 @@ export function Statements() {
                     <th className="p-4 text-right">Balance</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="divide-y divide-slate-100 text-foreground">
                   {transactions.map((tx, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                    <tr key={idx} className="hover:bg-muted transition-colors">
                       <td className="p-4 whitespace-nowrap">{tx.date}</td>
                       <td className="p-4 font-mono text-xs">{tx.reference}</td>
                       <td className="p-4">{tx.description}</td>
@@ -222,7 +229,7 @@ export function Statements() {
           <p className="text-blue-700 mt-1 mb-4">
             Your 1099-INT and other end-of-year tax documents are available in the Tax Center starting January 31st each year.
           </p>
-          <Button variant="outline" className="bg-white hover:bg-slate-50">Go to Tax Center</Button>
+          <Button variant="outline" className="bg-background hover:bg-muted">Go to Tax Center</Button>
         </div>
       </div>
     </div>

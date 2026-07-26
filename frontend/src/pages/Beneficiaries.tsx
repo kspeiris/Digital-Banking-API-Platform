@@ -149,8 +149,8 @@ export function Beneficiaries() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Beneficiaries</h1>
-          <p className="text-slate-500">Manage your saved contacts for quick transfers.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Beneficiaries</h1>
+          <p className="text-muted-foreground">Manage your saved contacts for quick transfers.</p>
         </div>
         <Button onClick={() => setAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Beneficiary
@@ -158,30 +158,30 @@ export function Beneficiaries() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-4 shrink-0 mb-2">
-        <Card className="bg-white border-slate-200 shadow-sm flex items-center p-4 gap-4">
+        <Card className="bg-background border-border shadow-sm flex items-center p-4 gap-4">
           <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">Total Saved</p>
-            <h3 className="text-2xl font-bold text-slate-900">{totalSaved}</h3>
+            <p className="text-sm font-medium text-muted-foreground">Total Saved</p>
+            <h3 className="text-2xl font-bold text-foreground">{totalSaved}</h3>
           </div>
         </Card>
-        <Card className="bg-white border-slate-200 shadow-sm flex items-center p-4 gap-4">
+        <Card className="bg-background border-border shadow-sm flex items-center p-4 gap-4">
           <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
             <Star className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">Favorites</p>
-            <h3 className="text-2xl font-bold text-slate-900">{totalFavorites}</h3>
+            <p className="text-sm font-medium text-muted-foreground">Favorites</p>
+            <h3 className="text-2xl font-bold text-foreground">{totalFavorites}</h3>
           </div>
         </Card>
       </div>
 
-      <Card className="bg-white border-slate-200 shadow-sm">
+      <Card className="bg-background border-border shadow-sm">
         <CardHeader className="pb-4">
           <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search beneficiaries..."
               className="pl-9"
@@ -197,10 +197,10 @@ export function Beneficiaries() {
                 <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
               </div>
             ) : filteredBeneficiaries.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 flex flex-col items-center justify-center">
-                <AlertCircle className="w-10 h-10 text-slate-400 mb-2" />
-                <p className="font-semibold text-slate-700">No beneficiaries found</p>
-                <p className="text-xs text-slate-400">Add a contact to get started.</p>
+              <div className="text-center py-12 text-muted-foreground flex flex-col items-center justify-center">
+                <AlertCircle className="w-10 h-10 text-muted-foreground mb-2" />
+                <p className="font-semibold text-foreground">No beneficiaries found</p>
+                <p className="text-xs text-muted-foreground">Add a contact to get started.</p>
               </div>
             ) : (
               <Table>
@@ -222,8 +222,8 @@ export function Beneficiaries() {
                             <Star className={`h-4 w-4 cursor-pointer ${ben.favorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-400'}`} />
                           </button>
                           <div>
-                            <p className="text-sm text-slate-900 font-semibold">{ben.nickname}</p>
-                            <p className="text-xs text-slate-500">{ben.accountName}</p>
+                            <p className="text-sm text-foreground font-semibold">{ben.nickname}</p>
+                            <p className="text-xs text-muted-foreground">{ben.accountName}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -273,23 +273,23 @@ export function Beneficiaries() {
           <form onSubmit={handleAddSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label htmlFor="nickname" className="text-sm font-medium text-slate-700">Nickname</label>
+                <label htmlFor="nickname" className="text-sm font-medium text-foreground">Nickname</label>
                 <Input id="nickname" value={newBen.nickname} onChange={handleInputChange} required placeholder="e.g. John's Savings" />
               </div>
               <div className="space-y-2">
-                <label htmlFor="accountName" className="text-sm font-medium text-slate-700">Account Name</label>
+                <label htmlFor="accountName" className="text-sm font-medium text-foreground">Account Name</label>
                 <Input id="accountName" value={newBen.accountName} onChange={handleInputChange} required placeholder="e.g. John Doe" />
               </div>
               <div className="space-y-2">
-                <label htmlFor="accountNumber" className="text-sm font-medium text-slate-700">Account Number</label>
+                <label htmlFor="accountNumber" className="text-sm font-medium text-foreground">Account Number</label>
                 <Input id="accountNumber" value={newBen.accountNumber} onChange={handleInputChange} required placeholder="e.g. 100120030040" />
               </div>
               <div className="space-y-2">
-                <label htmlFor="bankName" className="text-sm font-medium text-slate-700">Bank Name</label>
+                <label htmlFor="bankName" className="text-sm font-medium text-foreground">Bank Name</label>
                 <Input id="bankName" value={newBen.bankName} onChange={handleInputChange} required placeholder="e.g. DigitalBank" />
               </div>
               <div className="space-y-2 col-span-1 md:col-span-2">
-                <label htmlFor="branch" className="text-sm font-medium text-slate-700">Branch Name</label>
+                <label htmlFor="branch" className="text-sm font-medium text-foreground">Branch Name</label>
                 <Input id="branch" value={newBen.branch} onChange={handleInputChange} required placeholder="e.g. Kollupitiya" />
               </div>
             </div>
@@ -299,9 +299,9 @@ export function Beneficiaries() {
                 id="favorite"
                 checked={newBen.favorite}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                className="h-4 w-4 text-blue-600 border-border rounded focus:ring-blue-500"
               />
-              <label htmlFor="favorite" className="text-sm text-slate-700 select-none">Mark as Favorite</label>
+              <label htmlFor="favorite" className="text-sm text-foreground select-none">Mark as Favorite</label>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
