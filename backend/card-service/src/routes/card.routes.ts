@@ -12,5 +12,12 @@ router.put('/unfreeze', authMiddleware, authorize(['CUSTOMER', 'ADMIN']), contro
 router.put('/pin', authMiddleware, authorize(['CUSTOMER']), controller.changePin);
 router.put('/limit', authMiddleware, authorize(['CUSTOMER']), controller.updateLimits);
 router.put('/settings', authMiddleware, authorize(['CUSTOMER']), controller.updateSettings);
+router.post('/', authMiddleware, authorize(['ADMIN']), controller.createCard);
+router.delete('/:id', authMiddleware, authorize(['ADMIN']), controller.deleteCard);
+router.post('/request', authMiddleware, authorize(['CUSTOMER']), controller.requestCard);
+router.get('/requests', authMiddleware, authorize(['CUSTOMER']), controller.getCardRequests);
+router.get('/admin/requests', authMiddleware, authorize(['ADMIN']), controller.listAllCardRequests);
+router.put('/admin/requests/:id/approve', authMiddleware, authorize(['ADMIN']), controller.approveCardRequest);
+router.put('/admin/requests/:id/reject', authMiddleware, authorize(['ADMIN']), controller.rejectCardRequest);
 
 export default router;

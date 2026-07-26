@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import { CardStatus } from '@prisma/client';
+import { CardStatus, CardRequestStatus } from '@prisma/client';
 
 export class CardRepository {
   async findCustomerByUserId(userId: string) {
@@ -101,6 +101,101 @@ export class CardRepository {
         atmLimit: limits.atmLimit,
         onlineLimit: limits.onlineLimit,
         contactlessLimit: limits.contactlessLimit,
+      },
+    });
+  }
+
+  async createCard(data: {
+    accountId: string;
+    cardNumber: string;
+    cardType: string;
+    expiry: string;
+    cvvHash: string;
+    status?: 'ACTIVE' | 'FROZEN' | 'BLOCKED' | 'EXPIRED';
+    onlineEnabled?: boolean;
+    internationalEnabled?: boolean;
+  }) {
+    return prisma.card.create({
+      data,
+      include: {
+        limits: true,
+        account: {
+          include: {
+            customer: true,
+          },
+        },
+      },
+    });
+  }
+
+  async deleteCard(id: string) {
+    return prisma.card.delete({
+      where: { id },
+    });
+  }
+
+  async findAccountById(accountId: string) {
+    return prisma.account.findUnique({
+      where: { id: accountId },
+      include: {
+        customer: true,
+      },
+    });
+  }
+
+  async createCardRequest(data: {
+    customerId: string;
+    accountId: string;
+    cardType: string;
+  }) {
+    return prisma.cardRequest.create({
+      data,
+    });
+  }
+
+  async findCardRequestById(id: string) {
+    return prisma.cardRequest.findUnique({
+      where: { id },
+      include: {
+        account: true,
+        customer: true,
+      },
+    });
+  }
+
+  async findCardRequests(filters: { status?: CardRequestStatus; page: number; limit: number }) {
+    const skip = (filters.page - 1) * filters.limit;
+    const where = filters.status ? { status: filters.status } : {};
+    const [total, items] = await Promise.all([
+      prisma.cardRequest.count({ where }),
+      prisma.cardRequest.findMany({
+        where,
+        skip,
+        take: filters.limit,
+        orderBy: { requestedAt: 'desc' },
+        include: {
+          account: true,
+          customer: {
+            include: {
+              user: {
+                select: { email: true },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+    return { total, items };
+  }
+
+  async updateCardRequestStatus(id: string, status: CardRequestStatus, reviewedBy: string, rejectionReason?: string) {
+    return prisma.cardRequest.update({
+      where: { id },
+      data: {
+        status,
+        reviewedAt: new Date(),
+        reviewedBy,
+        ...(rejectionReason ? { rejectionReason } : {}),
       },
     });
   }

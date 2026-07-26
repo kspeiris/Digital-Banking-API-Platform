@@ -41,3 +41,29 @@ export const UpdateSettingsSchema = z.object({
   onlinePayments: z.boolean(),
   internationalUsage: z.boolean(),
 });
+
+export const CreateCardSchema = z.object({
+  accountId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid account ID format' }),
+  cardNumber: z.string().regex(/^\d{16}$/, { message: 'Card number must be exactly 16 digits' }),
+  cardType: z.enum(['DEBIT', 'CREDIT']),
+  expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, { message: 'Expiry must be in MM/YY format' }),
+  pin: z.string().regex(/^\d{4}$/, { message: 'PIN must be exactly 4 digits' }),
+  onlineEnabled: z.boolean().optional(),
+  internationalEnabled: z.boolean().optional(),
+});
+
+export const DeleteCardSchema = z.object({
+  id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid card ID format' }),
+});
+
+export const RequestCardSchema = z.object({
+  accountId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid account ID format' }),
+});
+
+export const CardRequestIdParamSchema = z.object({
+  id: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid card request ID format' }),
+});
+
+export const RejectCardRequestSchema = z.object({
+  reason: z.string().min(1, 'Reason is required').max(500, 'Reason must be at most 500 characters'),
+});
