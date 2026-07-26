@@ -1,6 +1,7 @@
 import { auth } from '@/services/auth';
+import { API_URLS } from '@/config/api';
 
-const API_URL = 'http://localhost:3005/api/v1/beneficiaries';
+const API_URL = API_URLS.beneficiary;
 
 export interface Beneficiary {
   beneficiaryId: string;

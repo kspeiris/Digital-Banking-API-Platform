@@ -1,9 +1,14 @@
-const API_URL = 'http://localhost:3006/api/v1/cards';
+import { API_URLS } from '@/config/api';
+import { auth } from '@/services/auth';
+
+const API_URL = API_URLS.card;
 
 export interface Card {
+  id?: string;
   cardId: string;
   cardType: string;
   cardNetwork: string;
+  cardNumber?: string;
   maskedNumber: string;
   expiry: string;
   status: string;
@@ -14,6 +19,16 @@ export interface Card {
     atmLimit: number;
     onlineLimit: number;
     contactlessLimit: number;
+  } | null;
+  account?: {
+    id: string;
+    accountNumber: string;
+    accountType: string;
+    customer?: {
+      firstName: string;
+      lastName: string;
+      nic: string;
+    } | null;
   } | null;
 }
 
@@ -31,7 +46,7 @@ export interface SettingsUpdate {
 
 export class CardService {
   private getAccessToken(): string {
-    const token = localStorage.getItem('accessToken');
+    const token = auth.getAccessToken();
     if (!token) throw new Error('No access token found');
     return token;
   }
@@ -92,6 +107,64 @@ export class CardService {
     await this.request('/settings', {
       method: 'PUT',
       body: JSON.stringify({ cardId, ...settings }),
+    });
+  }
+
+  public async createCard(data: {
+    accountId: string;
+    cardNumber: string;
+    cardType: string;
+    expiry: string;
+    pin: string;
+    onlineEnabled?: boolean;
+    internationalEnabled?: boolean;
+  }): Promise<Card> {
+    const res = await this.request('/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return res.data;
+  }
+
+  public async requestCard(accountId: string): Promise<void> {
+    const res = await this.request('/request', {
+      method: 'POST',
+      body: JSON.stringify({ accountId }),
+    });
+    return res.data;
+  }
+
+  public async deleteCard(cardId: string): Promise<void> {
+    await this.request(`/${cardId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  public async getCardRequests(status?: string): Promise<any> {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    const res = await this.request(`/requests${query}`);
+    return res.data;
+  }
+
+  public async getAllCardRequests(status?: string, page = 1, limit = 20): Promise<any> {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    params.set('page', page.toString());
+    params.set('limit', limit.toString());
+    const res = await this.request(`/admin/requests?${params.toString()}`);
+    return res;
+  }
+
+  public async approveCardRequest(requestId: string): Promise<any> {
+    return this.request(`/admin/requests/${requestId}/approve`, {
+      method: 'PUT',
+    });
+  }
+
+  public async rejectCardRequest(requestId: string, reason: string): Promise<any> {
+    return this.request(`/admin/requests/${requestId}/reject`, {
+      method: 'PUT',
+      body: JSON.stringify({ reason }),
     });
   }
 }

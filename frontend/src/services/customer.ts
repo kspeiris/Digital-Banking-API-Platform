@@ -1,6 +1,7 @@
 import { auth } from '@/services/auth';
+import { API_URLS } from '@/config/api';
 
-const API_URL = 'http://localhost:3002/api/v1/customers';
+const API_URL = API_URLS.customer;
 
 export interface CustomerProfile {
   customerId: string;
