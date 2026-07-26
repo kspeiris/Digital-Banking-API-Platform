@@ -9,6 +9,8 @@ const controller = new DeveloperController();
 router.get('/apis', authMiddleware, authorize(['DEVELOPER']), controller.getApis);
 router.post('/key', authMiddleware, authorize(['DEVELOPER']), controller.generateApiKey);
 router.delete('/key', authMiddleware, authorize(['DEVELOPER']), controller.revokeApiKey);
+router.get('/keys', authMiddleware, authorize(['DEVELOPER']), controller.listApiKeys);
+router.put('/key', authMiddleware, authorize(['DEVELOPER']), controller.updateApiKey);
 router.get('/analytics', authMiddleware, authorize(['DEVELOPER']), controller.getAnalytics);
 
 export default router;

@@ -13,3 +13,14 @@ export const RevokeKeySchema = z.object({
     .min(1, { message: 'API key is required' })
     .refine((val) => val.startsWith('pk_live_'), { message: 'Invalid API key format' }),
 });
+
+export const UpdateKeySchema = z.object({
+  apiKey: z
+    .string()
+    .min(1, { message: 'API key is required' })
+    .refine((val) => val.startsWith('pk_live_'), { message: 'Invalid API key format' }),
+  applicationName: z
+    .string()
+    .min(1, { message: 'Application name is required' })
+    .max(100, { message: 'Application name cannot exceed 100 characters' }),
+});

@@ -5,6 +5,7 @@ import { AnalyticsService } from '../services/analytics.service';
 import {
   GenerateKeySchema,
   RevokeKeySchema,
+  UpdateKeySchema,
 } from '../validators/developer.validation';
 import { UnauthorizedException } from 'shared-common';
 
@@ -72,6 +73,45 @@ export class DeveloperController {
         success: true,
         message: 'API key revoked successfully',
       });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  listApiKeys = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const keys = await this.developerService.listApiKeys(req.user.id);
+      res.json({
+        success: true,
+        data: keys,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateApiKey = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const bodyResult = UpdateKeySchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const result = await this.developerService.updateApiKey(
+        req.user.id,
+        bodyResult.data.apiKey,
+        bodyResult.data.applicationName
+      );
+
+      res.json(result);
     } catch (err) {
       next(err);
     }

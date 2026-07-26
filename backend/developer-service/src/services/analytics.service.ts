@@ -1,10 +1,18 @@
+import { prisma } from '../config/database';
+
 export class AnalyticsService {
   async getAnalyticsSummary(userId: string) {
+    const [totalTransactions, successTransactions, failedTransactions] = await Promise.all([
+      prisma.transaction.count(),
+      prisma.transaction.count({ where: { status: 'SUCCESS' } }),
+      prisma.transaction.count({ where: { status: 'FAILED' } }),
+    ]);
+
     return {
-      totalRequests: 150240,
-      successfulRequests: 148520,
-      failedRequests: 1720,
-      averageResponseTime: '124ms',
+      totalRequests: totalTransactions,
+      successfulRequests: successTransactions,
+      failedRequests: failedTransactions,
+      averageResponseTime: '0ms',
     };
   }
 }

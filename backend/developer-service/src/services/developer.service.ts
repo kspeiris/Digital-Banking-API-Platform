@@ -79,7 +79,6 @@ export class DeveloperService {
         },
       });
 
-      // Audit Log
       await tx.auditLog.create({
         data: {
           userId,
@@ -88,5 +87,35 @@ export class DeveloperService {
         },
       });
     });
+  }
+
+  async listApiKeys(userId: string) {
+    return this.developerRepository.findKeysByUserId(userId);
+  }
+
+  async updateApiKey(userId: string, apiKey: string, applicationName: string) {
+    const key = await this.developerRepository.findKeyByApiKey(userId, apiKey);
+    if (!key) {
+      throw new NotFoundException('API key not found');
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.apiKey.update({
+        where: { id: key.id },
+        data: {
+          applicationName,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'API_KEY_UPDATE',
+          module: 'DEVELOPER',
+        },
+      });
+    });
+
+    return { success: true, message: 'API key updated successfully' };
   }
 }

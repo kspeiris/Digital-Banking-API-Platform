@@ -44,4 +44,20 @@ export class DeveloperRepository {
       data: { status },
     });
   }
+
+  async findKeysByUserId(userId: string) {
+    return prisma.apiKey.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        apiKey: true,
+        applicationName: true,
+        status: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 }
