@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-production';
-const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes as per specification
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+const ACCESS_TOKEN_EXPIRY = '15m';
 
 export interface TokenPayload {
   userId: string;
@@ -17,11 +20,11 @@ export function generateAccessToken(payload: TokenPayload): string {
       email: payload.email,
       role: payload.role,
     },
-    JWT_SECRET,
+    JWT_SECRET as jwt.Secret,
     { expiresIn: ACCESS_TOKEN_EXPIRY }
   );
 }
 
 export function verifyAccessToken(token: string): TokenPayload & { sub: string } {
-  return jwt.verify(token, JWT_SECRET) as TokenPayload & { sub: string };
+  return jwt.verify(token, JWT_SECRET as jwt.Secret) as TokenPayload & { sub: string };
 }

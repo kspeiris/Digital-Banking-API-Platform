@@ -1,16 +1,15 @@
 import nodemailer from 'nodemailer';
 import { logger } from 'shared-common';
 
-// In development/test, we use a mock transporter that logs emails to the console
-// or we can read from SMTP environment variables.
-const useMockMail = process.env.MAIL_HOST ? false : true;
+const MAIL_HOST = process.env.MAIL_HOST;
+const useMockMail = !MAIL_HOST;
 
 export const transporter = useMockMail
   ? nodemailer.createTransport({
       jsonTransport: true,
     })
   : nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
+      host: MAIL_HOST,
       port: Number(process.env.MAIL_PORT || 587),
       secure: process.env.MAIL_SECURE === 'true',
       auth: {
@@ -20,7 +19,7 @@ export const transporter = useMockMail
     });
 
 if (useMockMail) {
-  logger.info('Using JSON Mock Mail Transporter (emails will be logged to console/files)');
+  logger.warn('Using JSON Mock Mail Transporter (emails will be logged to console/files). Set MAIL_HOST to enable real SMTP.');
 } else {
-  logger.info(`Mail SMTP Transporter initialized using host: ${process.env.MAIL_HOST}`);
+  logger.info(`Mail SMTP Transporter initialized using host: ${MAIL_HOST}`);
 }

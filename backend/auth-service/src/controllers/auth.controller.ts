@@ -7,6 +7,7 @@ import {
   forgotPasswordSchema,
   verifyOtpSchema,
   resetPasswordSchema,
+  changePasswordSchema,
 } from '../validators/auth.validation';
 
 export class AuthController {
@@ -119,6 +120,26 @@ export class AuthController {
 
       const data = await this.authService.getProfile(userId);
       res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  changePassword = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Unauthorized access' });
+        return;
+      }
+
+      const validatedData = changePasswordSchema.parse(req.body);
+      await this.authService.changePassword(userId, validatedData.currentPassword, validatedData.newPassword);
+
+      res.json({
+        success: true,
+        message: 'Password changed successfully',
+      });
     } catch (err) {
       next(err);
     }

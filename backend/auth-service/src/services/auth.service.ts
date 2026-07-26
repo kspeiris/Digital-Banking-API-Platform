@@ -165,4 +165,19 @@ export class AuthService {
       role: user.role.name,
     };
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.userRepository.findUserById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isCurrentPasswordValid = await comparePassword(currentPassword, user.passwordHash);
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const hashedNewPassword = await hashPassword(newPassword);
+    await this.userRepository.updateUserPassword(user.email, hashedNewPassword);
+  }
 }
