@@ -34,7 +34,12 @@ export function Login() {
       }
     } catch (err: any) {
       setIsLoading(false);
-      toast.error(err.message || 'Login failed. Please check your credentials.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('failed')) {
+        toast.error('Invalid credentials');
+      } else {
+        toast.error(msg || 'Login failed. Please check your credentials.');
+      }
     }
   };
 
@@ -92,9 +97,9 @@ export function Login() {
           <div className="mt-6 text-center text-sm">
             <p className="text-muted-foreground mb-2">Demo Accounts:</p>
             <div className="flex justify-center gap-4 text-xs font-mono bg-muted p-2 rounded-md">
-              <span>Customer: any email</span>
-              <span>Admin: 'admin@...'</span>
-              <span>Dev: 'dev@...'</span>
+              <span>Customer: user@example.com</span>
+              <span>Admin: admin@example.com</span>
+              <span>Dev: dev@example.com</span>
             </div>
           </div>
         </CardContent>

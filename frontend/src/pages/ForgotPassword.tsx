@@ -71,8 +71,8 @@ export function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md bg-white border-slate-200 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md bg-background border-border shadow-xl">
         <CardHeader className="space-y-1 items-center">
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             <KeyRound className="h-6 w-6 text-blue-600" />
