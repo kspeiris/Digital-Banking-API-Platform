@@ -66,72 +66,72 @@ export function DevPortal() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-white border-slate-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500">Total API Calls</CardTitle>
-                <Activity className="h-4 w-4 text-slate-400" />
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total API Calls</CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{(analytics?.totalRequests || 0).toLocaleString()}</div>
-                <p className="text-xs text-slate-500">Last 30 days</p>
+                <div className="text-2xl font-bold text-foreground">{(analytics?.totalRequests || 0).toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">Last 30 days</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-slate-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500">Avg Response Time</CardTitle>
-                <Clock className="h-4 w-4 text-slate-400" />
+                <CardTitle className="text-sm font-medium text-muted-foreground">Avg Response Time</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{analytics?.averageResponseTime || '0ms'}</div>
-                <p className="text-xs text-slate-500">99th percentile</p>
+                <div className="text-2xl font-bold text-foreground">{analytics?.averageResponseTime || '0ms'}</div>
+                <p className="text-xs text-muted-foreground">99th percentile</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-slate-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500">Error Rate</CardTitle>
-                <ServerCrash className="h-4 w-4 text-slate-400" />
+                <CardTitle className="text-sm font-medium text-muted-foreground">Error Rate</CardTitle>
+                <ServerCrash className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="text-2xl font-bold text-foreground">
                   {analytics ? ((analytics.failedRequests / analytics.totalRequests) * 100).toFixed(2) : '0.00'}%
                 </div>
-                <p className="text-xs text-slate-500">Within SLA</p>
+                <p className="text-xs text-muted-foreground">Within SLA</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-slate-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500">Available APIs</CardTitle>
-                <Key className="h-4 w-4 text-slate-400" />
+                <CardTitle className="text-sm font-medium text-muted-foreground">Available APIs</CardTitle>
+                <Key className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{apis.length}</div>
-                <p className="text-xs text-slate-500">Published endpoints</p>
+                <div className="text-2xl font-bold text-foreground">{apis.length}</div>
+                <p className="text-xs text-muted-foreground">Published endpoints</p>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="bg-white border-slate-200 shadow-sm">
+          <Card className="bg-background border-border shadow-sm">
             <CardHeader>
               <CardTitle>Active Applications</CardTitle>
               <CardDescription>Applications using your API keys.</CardDescription>
             </CardHeader>
             <CardContent>
               {apis.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
+                <div className="text-center py-12 text-muted-foreground">
                   <Key className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="font-medium text-slate-700">No applications found</p>
-                  <p className="text-xs text-slate-400 mt-1">Generate an API key to create your first application.</p>
+                  <p className="font-medium text-foreground">No applications found</p>
+                  <p className="text-xs text-muted-foreground mt-1">Generate an API key to create your first application.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {apis.slice(0, 4).map((api, idx) => (
                     <div key={idx} className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
-                        <h4 className="font-semibold text-slate-900">{api.name}</h4>
-                        <p className="text-sm text-slate-500">Version: {api.version} • Status: {api.status}</p>
+                        <h4 className="font-semibold text-foreground">{api.name}</h4>
+                        <p className="text-sm text-muted-foreground">Version: {api.version} • Status: {api.status}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-mono bg-slate-50 px-2 py-1 rounded">pk_live_*******************{Math.random().toString(36).slice(2, 6)}</div>
+                        <div className="text-sm font-mono bg-muted px-2 py-1 rounded">pk_live_*******************{Math.random().toString(36).slice(2, 6)}</div>
                       </div>
                     </div>
                   ))}

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Plus, Key, Eye, EyeOff, Trash2, ShieldAlert, Loader2 } from 'lucide-react';
+import { Copy, Plus, Key, Eye, EyeOff, Trash2, ShieldAlert, Loader2, Pencil } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import {
@@ -37,18 +37,23 @@ export function ApiKeys() {
   const [generating, setGenerating] = useState(false);
   const [deleteKey, setDeleteKey] = useState<ApiKeyRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingKey, setEditingKey] = useState<ApiKeyRow | null>(null);
+  const [editName, setEditName] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   const loadKeys = async () => {
     setLoading(true);
     try {
-      const apis = await developerService.getApis();
-      const mapped: ApiKeyRow[] = apis.map((api, idx) => ({
-        id: `key-${idx}`,
-        name: api.name,
-        token: `pk_live_${api.name.toLowerCase().replace(/\s/g, '_')}_${Math.random().toString(36).slice(2, 10)}`,
-        environment: 'Production',
-        created: new Date(Date.now() - Math.random() * 1e10).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-        lastUsed: Math.random() > 0.5 ? 'Today, 14:32' : 'Never',
+      const keys = await developerService.listApiKeys();
+      const mapped: ApiKeyRow[] = keys.map((key) => ({
+        id: key.id,
+        name: key.applicationName,
+        token: key.apiKey,
+        environment: key.status === 'ACTIVE' ? 'Production' : 'Revoked',
+        created: key.createdAt ? new Date(key.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown',
+        lastUsed: 'Never',
       }));
       setKeys(mapped);
     } catch (err: any) {
@@ -73,6 +78,7 @@ export function ApiKeys() {
       toast.success('API Key generated successfully');
       setNewKeyName('');
       setNewKeyEnv('Development');
+      setGenerateDialogOpen(false);
       loadKeys();
     } catch (err: any) {
       toast.error(err.message || 'Failed to generate API key');
@@ -96,6 +102,31 @@ export function ApiKeys() {
     }
   };
 
+  const handleEdit = (key: ApiKeyRow) => {
+    setEditingKey(key);
+    setEditName(key.name);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingKey || !editName.trim()) {
+      toast.error('Please enter a key name');
+      return;
+    }
+    setUpdating(true);
+    try {
+      await developerService.updateApiKey(editingKey.token, editName);
+      toast.success('API key updated successfully');
+      setEditDialogOpen(false);
+      setEditingKey(null);
+      loadKeys();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update API key');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('API Key copied to clipboard');
@@ -105,11 +136,11 @@ export function ApiKeys() {
     <div className="flex flex-col gap-6 max-w-5xl">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">API Keys</h1>
-          <p className="text-slate-500">Manage your API keys for application access.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">API Keys</h1>
+          <p className="text-muted-foreground">Manage your API keys for application access.</p>
         </div>
         
-        <Dialog>
+        <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
           <DialogTrigger render={<Button />}>
             <Plus className="mr-2 h-4 w-4" /> Generate New Key
           </DialogTrigger>
@@ -120,22 +151,43 @@ export function ApiKeys() {
                 Create a new API key to authenticate your applications.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Key Name</Label>
-                <Input id="name" placeholder="e.g. Production Web App" />
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleGenerate();
+            }}>
+              <div className="grid gap-4 py-4 mb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Key Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="e.g. Production Web App"
+                    required
+                    value={newKeyName}
+                    onChange={(e) => setNewKeyName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="environment">Environment</Label>
+                  <select
+                    id="environment"
+                    value={newKeyEnv}
+                    onChange={(e) => setNewKeyEnv(e.target.value)}
+                    className="w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-9 bg-background"
+                  >
+                    <option value="Development">Development</option>
+                    <option value="Production">Production</option>
+                  </select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="environment">Environment</Label>
-                <select className="w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 h-9">
-                  <option>Development</option>
-                  <option>Production</option>
-                </select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Generate</Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setGenerateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={generating}>
+                  {generating ? 'Generating...' : 'Generate'}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -150,7 +202,7 @@ export function ApiKeys() {
         </div>
       </div>
 
-      <Card className="bg-white border-slate-200 shadow-sm">
+      <Card className="bg-background border-border shadow-sm">
         <CardHeader>
           <CardTitle>Active API Keys</CardTitle>
           <CardDescription>Manage keys used by your applications.</CardDescription>
@@ -161,10 +213,10 @@ export function ApiKeys() {
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
           ) : keys.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-muted-foreground">
               <Key className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="font-medium text-slate-700">No API keys found</p>
-              <p className="text-xs text-slate-400 mt-1">Generate your first key to get started.</p>
+              <p className="font-medium text-foreground">No API keys found</p>
+              <p className="text-xs text-muted-foreground mt-1">Generate your first key to get started.</p>
             </div>
           ) : (
             <div className="rounded-md border">
@@ -184,12 +236,12 @@ export function ApiKeys() {
                     <TableRow key={key.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          <Key className="h-4 w-4 text-slate-400" />
+                          <Key className="h-4 w-4 text-muted-foreground" />
                           {key.name}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2 font-mono text-sm bg-slate-50 px-2 py-1 rounded w-fit">
+                        <div className="flex items-center gap-2 font-mono text-sm bg-muted px-2 py-1 rounded w-fit">
                           {showKey === key.id ? key.token : '••••••••••••••••'}
                           <Button
                             variant="ghost"
@@ -210,16 +262,21 @@ export function ApiKeys() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={key.environment === 'Production' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-700'}>
+                        <Badge variant="outline" className={key.environment === 'Production' ? 'bg-green-50 text-green-700' : 'bg-muted text-foreground'}>
                           {key.environment}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500">{key.created}</TableCell>
-                      <TableCell className="text-sm text-slate-500">{key.lastUsed}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{key.created}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{key.lastUsed}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteKey(key)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="text-blue-500 hover:text-blue-600 hover:bg-blue-50" onClick={() => handleEdit(key)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteKey(key)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -229,6 +286,37 @@ export function ApiKeys() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit API Key Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit API Key</DialogTitle>
+            <DialogDescription>
+              Update the application name for this API key.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editName">Application Name</Label>
+              <Input
+                id="editName"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="e.g. Production Web App"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleUpdate} disabled={updating}>
+              {updating ? 'Updating...' : 'Update'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={!!deleteKey}

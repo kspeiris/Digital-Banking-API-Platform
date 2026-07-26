@@ -28,8 +28,8 @@ export function ApiDocs() {
     <div className="flex flex-col gap-6 max-w-5xl">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">API Documentation</h1>
-          <p className="text-slate-500">Integrate DigitalBank services into your applications.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">API Documentation</h1>
+          <p className="text-muted-foreground">Integrate DigitalBank services into your applications.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Download OpenAPI Spec</Button>
@@ -38,16 +38,16 @@ export function ApiDocs() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1 space-y-1">
-          <div className="font-semibold text-sm mb-2 text-slate-900 px-3">Getting Started</div>
-          <Button variant="ghost" className="w-full justify-start bg-slate-100 font-medium">Authentication</Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-500">Rate Limits</Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-500">Errors</Button>
+          <div className="font-semibold text-sm mb-2 text-foreground px-3">Getting Started</div>
+          <Button variant="ghost" className="w-full justify-start bg-muted font-medium">Authentication</Button>
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground">Rate Limits</Button>
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground">Errors</Button>
           
-          <div className="font-semibold text-sm mb-2 mt-6 text-slate-900 px-3">Endpoints</div>
-          <Button variant="ghost" className="w-full justify-start text-slate-500">Accounts</Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-500">Transactions</Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-500">Transfers</Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-500">Cards</Button>
+          <div className="font-semibold text-sm mb-2 mt-6 text-foreground px-3">Endpoints</div>
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground">Accounts</Button>
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground">Transactions</Button>
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground">Transfers</Button>
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground">Cards</Button>
         </div>
 
         <div className="md:col-span-3 space-y-6">
@@ -57,7 +57,7 @@ export function ApiDocs() {
             </div>
           ) : (
             <>
-              <Card className="bg-white border-slate-200 shadow-sm">
+              <Card className="bg-background border-border shadow-sm">
                 <CardHeader>
                   <CardTitle>Authentication</CardTitle>
                   <CardDescription>
@@ -69,21 +69,21 @@ export function ApiDocs() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 text-slate-400 hover:text-white"
+                      className="absolute top-2 right-2 text-muted-foreground hover:text-white"
                       onClick={() => handleCopy('Authorization: Bearer YOUR_API_KEY')}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                     <div><span className="text-pink-400">Authorization</span>: Bearer YOUR_API_KEY</div>
                   </div>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-muted-foreground">
                     You can generate API keys from the <a href="/api-keys" className="text-blue-600 hover:underline">API Keys</a> section in your developer portal.
                   </p>
                 </CardContent>
               </Card>
 
               {apis.map((api) => (
-                <Card key={api.name} className="bg-white border-slate-200 shadow-sm">
+                <Card key={api.name} className="bg-background border-border shadow-sm">
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <Badge className={`${api.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'} hover:bg-opacity-80 font-mono`}>GET</Badge>
@@ -106,7 +106,7 @@ export function ApiDocs() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute top-2 right-2 text-slate-400 hover:text-white"
+                            className="absolute top-2 right-2 text-muted-foreground hover:text-white"
                             onClick={() => handleCopy(`curl -X GET https://api.digitalbank.com/v1/${api.name.toLowerCase().replace(/\s+/g, '-')} \\n  -H "Authorization: Bearer YOUR_API_KEY"`)}
                           >
                             <Copy className="h-4 w-4" />
