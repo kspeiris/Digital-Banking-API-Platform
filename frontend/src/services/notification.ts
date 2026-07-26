@@ -1,4 +1,7 @@
-const API_URL = 'http://localhost:3008/api/v1/notifications';
+import { API_URLS } from '@/config/api';
+import { auth } from '@/services/auth';
+
+const API_URL = API_URLS.notification;
 
 export interface Notification {
   notificationId: string;
@@ -12,7 +15,7 @@ export interface Notification {
 
 export class NotificationService {
   private getAccessToken(): string {
-    const token = localStorage.getItem('accessToken');
+    const token = auth.getAccessToken();
     if (!token) throw new Error('No access token found');
     return token;
   }
@@ -58,6 +61,31 @@ export class NotificationService {
   public async deleteNotification(notificationId: string): Promise<void> {
     await this.request(`/${notificationId}`, {
       method: 'DELETE',
+    });
+  }
+
+  public async broadcast(data: {
+    title: string;
+    message: string;
+    type?: string;
+    targetRole?: string;
+    targetUserIds?: string[];
+  }): Promise<any> {
+    return this.request('/broadcast', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  public async create(data: {
+    userId: string;
+    title: string;
+    message: string;
+    type?: string;
+  }): Promise<any> {
+    return this.request('/', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 }

@@ -1,4 +1,7 @@
-const API_URL = 'http://localhost:3007/api/v1/loans';
+import { API_URLS } from '@/config/api';
+import { auth } from '@/services/auth';
+
+const API_URL = API_URLS.loan;
 
 export interface Loan {
   loanId: string;
@@ -7,9 +10,17 @@ export interface Loan {
   approvedAmount: number;
   interestRate: number;
   durationMonths: number;
-  emi: number;
+  emi?: number;
   status: string;
   submittedAt: string;
+  monthlyIncome?: number;
+  employmentType?: string;
+  purpose?: string;
+  customer?: {
+    firstName: string;
+    lastName: string;
+    nic: string;
+  } | null;
 }
 
 export interface ApplyLoanData {
@@ -23,7 +34,7 @@ export interface ApplyLoanData {
 
 export class LoanService {
   private getAccessToken(): string {
-    const token = localStorage.getItem('accessToken');
+    const token = auth.getAccessToken();
     if (!token) throw new Error('No access token found');
     return token;
   }
@@ -90,6 +101,30 @@ export class LoanService {
       throw new Error(err.message || `HTTP ${res.status}`);
     }
   }
+
+  public async approveLoan(loanId: string, approvedAmount: number, interestRate: number): Promise<any> {
+    const res = await this.request(`/${loanId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ approvedAmount, interestRate }),
+    });
+    return res.data;
+  }
+
+  public async rejectLoan(loanId: string, reason?: string): Promise<any> {
+    const res = await this.request(`/${loanId}/reject`, {
+      method: 'PUT',
+      body: JSON.stringify({ reason }),
+    });
+    return res.data;
+  }
+
+  public async cancelLoan(loanId: string): Promise<any> {
+    const res = await this.request(`/${loanId}`, {
+      method: 'DELETE',
+    });
+    return res.data;
+  }
 }
 
 export const loanService = new LoanService();
+
