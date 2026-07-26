@@ -6,6 +6,8 @@ import { AuditService } from '../services/audit.service';
 import {
   FreezeCustomerSchema,
   SearchQuerySchema,
+  UnfreezeCustomerSchema,
+  CreateCustomerSchema,
 } from '../validators/admin.validation';
 import { UnauthorizedException } from 'shared-common';
 import { z } from 'zod';
@@ -97,6 +99,136 @@ export class AdminController {
       res.json({
         success: true,
         data: result.data,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getTransactions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const queryResult = SearchQuerySchema.extend({
+        status: z.enum(['PENDING', 'SUCCESS', 'FAILED', 'REVERSED']).optional(),
+        from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      }).safeParse(req.query);
+
+      if (!queryResult.success) {
+        throw queryResult.error;
+      }
+
+      const result = await this.dashboardService.getTransactions(queryResult.data);
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getFraudAlerts = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const alerts = await this.dashboardService.getFraudAlerts();
+      res.json({
+        success: true,
+        data: alerts,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  freezeByUserId = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const bodyResult = z.object({ userId: z.string().uuid(), reason: z.string().min(1) }).safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      await this.customerService.freezeCustomerByUserId(req.user.id, bodyResult.data.userId, bodyResult.data.reason);
+
+      res.json({
+        success: true,
+        message: 'User account frozen successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  unfreezeByUserId = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const bodyResult = UnfreezeCustomerSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      await this.customerService.unfreezeCustomerByUserId(req.user.id, bodyResult.data.userId, bodyResult.data.reason);
+
+      res.json({
+        success: true,
+        message: 'User account unfrozen successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createCustomer = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const bodyResult = CreateCustomerSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const result = await this.customerService.createCustomer(req.user.id, bodyResult.data);
+      res.status(201).json({
+        success: true,
+        data: result,
+        message: 'Customer created successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  deleteCustomer = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const paramResult = z.object({ customerId: z.string().uuid() }).safeParse(req.params);
+      if (!paramResult.success) {
+        throw paramResult.error;
+      }
+
+      await this.customerService.deleteCustomer(req.user.id, paramResult.data.customerId);
+
+      res.json({
+        success: true,
+        message: 'Customer deleted successfully',
       });
     } catch (err) {
       next(err);

@@ -37,3 +37,23 @@ export const ReportsQuerySchema = z.object({
     message: 'Unsupported format type',
   }),
 });
+
+export const UnfreezeCustomerSchema = z.object({
+  userId: z.string().uuid({ message: 'Invalid user ID format' }),
+  reason: z.string().optional(),
+});
+
+export const CreateCustomerSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  phone: z.string().min(9, 'Invalid phone number'),
+  nic: z.string().min(10, 'Invalid NIC format'),
+  dateOfBirth: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date of birth format',
+  }),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+});
