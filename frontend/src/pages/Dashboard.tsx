@@ -19,15 +19,21 @@ export function Dashboard() {
         setAccounts(userAccounts);
 
         if (userAccounts.length > 0) {
-          // Fetch statement for the first account to populate recent activities
-          const statementData = await accountService.getAccountStatements(userAccounts[0].accountId, {
-            limit: 5,
-            page: 1,
-            format: 'json'
-          });
-          if (statementData && statementData.transactions) {
-            setTransactions(statementData.transactions);
-          }
+          // Fetch statements for all accounts and merge them to populate recent activities
+          const allStatements = await Promise.all(
+            userAccounts.map(acc =>
+              accountService.getAccountStatements(acc.accountId, {
+                limit: 5,
+                page: 1,
+                format: 'json'
+              }).catch(() => ({ transactions: [] }))
+            )
+          );
+          const combined = allStatements
+            .flatMap(stmt => stmt?.transactions || [])
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, 5);
+          setTransactions(combined);
         }
       } catch (err: any) {
         toast.error(err.message || 'Failed to load dashboard data');
@@ -61,7 +67,7 @@ export function Dashboard() {
       <div className="flex h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-sm text-slate-500">Loading your dashboard...</p>
+          <p className="text-sm text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -69,19 +75,17 @@ export function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
-          <p className="text-slate-500">Welcome back. Here's an overview of your accounts.</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">Welcome back. Here's an overview of your accounts.</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 shrink-0">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 shrink-0">
+        <div className="bg-background p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Available Balance</p>
-            <h3 className="text-2xl font-bold text-slate-900">{formatCurrency(totalAvailableBalance, mainCurrency)}</h3>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Total Available Balance</p>
+            <h3 className="text-2xl font-bold text-foreground">{formatCurrency(totalAvailableBalance, mainCurrency)}</h3>
           </div>
           <p className="text-xs text-green-600 mt-2 flex items-center gap-1 font-medium">
             <ArrowDownRight className="h-3 w-3" />
@@ -89,22 +93,22 @@ export function Dashboard() {
           </p>
         </div>
         
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
+        <div className="bg-background p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Accounts Connected</p>
-            <h3 className="text-2xl font-bold text-slate-900">{accounts.length}</h3>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Accounts Connected</p>
+            <h3 className="text-2xl font-bold text-foreground">{accounts.length}</h3>
           </div>
-          <div className="w-full bg-slate-100 h-1 mt-4 rounded-full overflow-hidden">
+          <div className="w-full bg-muted h-1 mt-4 rounded-full overflow-hidden">
             <div className="bg-blue-500 h-full w-full transition-all duration-500"></div>
           </div>
         </div>
         
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
+        <div className="bg-background p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Recent Month Activity</p>
-            <h3 className="text-2xl font-bold text-slate-900">{transactions.length} Transactions</h3>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Recent Month Activity</p>
+            <h3 className="text-2xl font-bold text-foreground">{transactions.length} Transactions</h3>
           </div>
-          <div className="w-full bg-slate-100 h-1 mt-4 rounded-full overflow-hidden">
+          <div className="w-full bg-muted h-1 mt-4 rounded-full overflow-hidden">
             <div className="bg-orange-500 h-full w-2/5 transition-all duration-500"></div>
           </div>
         </div>
@@ -125,10 +129,10 @@ export function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Chart */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6 flex flex-col shadow-sm">
+        <div className="lg:col-span-2 bg-background rounded-xl border border-border p-6 flex flex-col shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h4 className="font-bold text-slate-900">Spending Overview</h4>
-            <select className="text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none">
+            <h4 className="font-bold text-foreground">Spending Overview</h4>
+            <select className="text-xs bg-muted border border-border rounded px-2 py-1 outline-none">
               <option>Last 6 Months</option>
               <option>Last 30 Days</option>
             </select>
@@ -155,25 +159,25 @@ export function Dashboard() {
         </div>
 
         {/* Recent Transactions Preview */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col shadow-sm">
-          <h4 className="font-bold text-slate-900 mb-4">Recent Activity</h4>
+        <div className="bg-background rounded-xl border border-border p-6 flex flex-col shadow-sm">
+          <h4 className="font-bold text-foreground mb-4">Recent Activity</h4>
           <div className="space-y-4 flex-1">
             {transactions.length === 0 ? (
-              <p className="text-slate-500 text-sm text-center py-8">No recent transactions found.</p>
+              <p className="text-muted-foreground text-sm text-center py-8">No recent transactions found.</p>
             ) : (
               transactions.slice(0, 4).map((txn, index) => {
                 const isPositive = txn.credit > 0;
                 const amount = isPositive ? txn.credit : txn.debit;
                 return (
                   <div key={index} className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600">
+                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
                       {isPositive ? <ArrowDownRight className="h-5 w-5 text-green-600" /> : <ArrowUpRight className="h-5 w-5 text-red-600" />}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-slate-900">{txn.description}</p>
-                      <p className="text-xs text-slate-500">{txn.date} • {txn.reference}</p>
+                      <p className="text-sm font-semibold text-foreground">{txn.description}</p>
+                      <p className="text-xs text-muted-foreground">{txn.date} • {txn.reference}</p>
                     </div>
-                    <span className={`text-sm font-bold ${isPositive ? 'text-green-600' : 'text-slate-900'}`}>
+                    <span className={`text-sm font-bold ${isPositive ? 'text-green-600' : 'text-foreground'}`}>
                       {isPositive ? '+' : '-'}{formatCurrency(amount, mainCurrency)}
                     </span>
                   </div>
@@ -190,41 +194,32 @@ export function Dashboard() {
       </div>
 
       {/* Bottom Quick Actions */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 shrink-0 lg:h-28">
-        <Link to="/customer/transfers" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full cursor-pointer">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 shrink-0">
+        <Link to="/customer/transfers" className="bg-background border border-border rounded-xl flex items-center gap-4 px-5 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full cursor-pointer">
           <div className="w-10 h-10 shrink-0 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
             <Send className="w-5 h-5" />
           </div>
           <div className="text-left leading-tight">
-            <p className="font-bold text-sm text-slate-900">Send Money</p>
-            <p className="text-[10px] text-slate-500">Instant transfer</p>
+            <p className="font-bold text-sm text-foreground">Send Money</p>
+            <p className="text-[10px] text-muted-foreground">Instant transfer</p>
           </div>
         </Link>
-        <button className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full text-left cursor-pointer">
-          <div className="w-10 h-10 shrink-0 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-            <Wallet className="w-5 h-5" />
-          </div>
-          <div className="text-left leading-tight">
-            <p className="font-bold text-sm text-slate-900">Pay Bills</p>
-            <p className="text-[10px] text-slate-500">Utilities & more</p>
-          </div>
-        </button>
-        <Link to="/customer/statements" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full cursor-pointer">
-          <div className="w-10 h-10 shrink-0 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+        <Link to="/customer/statements" className="bg-background border border-border rounded-xl flex items-center gap-4 px-5 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full cursor-pointer">
+          <div className="w-10 h-10 shrink-0 rounded-full bg-muted text-muted-foreground flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
             <FileText className="w-5 h-5" />
           </div>
           <div className="text-left leading-tight">
-            <p className="font-bold text-sm text-slate-900">Statements</p>
-            <p className="text-[10px] text-slate-500">Download history</p>
+            <p className="font-bold text-sm text-foreground">Statements</p>
+            <p className="text-[10px] text-muted-foreground">Download history</p>
           </div>
         </Link>
-        <Link to="/customer/cards" className="bg-white border border-slate-200 rounded-xl flex items-center gap-4 px-6 py-4 hover:border-red-300 hover:shadow-md transition-all group shadow-sm h-full text-left cursor-pointer">
-          <div className="w-10 h-10 shrink-0 rounded-full bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
+        <Link to="/customer/cards" className="bg-background border border-border rounded-xl flex items-center gap-4 px-5 py-4 hover:border-blue-300 hover:shadow-md transition-all group shadow-sm h-full cursor-pointer">
+          <div className="w-10 h-10 shrink-0 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
             <Lock className="w-5 h-5" />
           </div>
           <div className="text-left leading-tight">
-            <p className="font-bold text-sm text-red-600">Security Center</p>
-            <p className="text-[10px] text-slate-500">Manage your cards</p>
+            <p className="font-bold text-sm text-foreground">Card Security</p>
+            <p className="text-[10px] text-muted-foreground">Manage your cards</p>
           </div>
         </Link>
       </div>
