@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { auth } from '@/services/auth';
 import { customer } from '@/services/customer';
 import { 
@@ -19,7 +19,8 @@ import {
   Key,
   PieChart,
   Landmark,
-  Wallet
+  Wallet,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,15 +51,20 @@ const customerNavigation: SidebarItem[] = [
   { icon: Landmark, label: 'Loans', path: '/customer/loans' },
   { icon: Users, label: 'Beneficiaries', path: '/customer/beneficiaries' },
   { icon: BookOpen, label: 'Statements', path: '/customer/statements' },
+  { icon: Bell, label: 'Notifications', path: '/customer/notifications' },
   { icon: SettingsIcon, label: 'Settings', path: '/customer/settings' },
 ];
 
 const adminNavigation: SidebarItem[] = [
   { icon: BarChart3, label: 'Overview', path: '/admin' },
   { icon: Users, label: 'Users', path: '/admin/users' },
+  { icon: Wallet, label: 'Accounts', path: '/admin/accounts' },
+  { icon: CreditCard, label: 'Cards', path: '/admin/cards' },
   { icon: History, label: 'Transactions', path: '/admin/transactions' },
+  { icon: Landmark, label: 'Loans', path: '/admin/loans' },
   { icon: PieChart, label: 'Reports', path: '/admin/reports' },
   { icon: ShieldAlert, label: 'Fraud Alerts', path: '/admin/fraud' },
+  { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
 ];
 
 const devNavigation: SidebarItem[] = [
@@ -72,13 +78,15 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
   const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const [validating, setValidating] = useState(true);
+  const [authError, setAuthError] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       const session = auth.getSession();
       if (!session || !session.accessToken) {
         auth.clearSession();
-        navigate('/login');
+        setAuthError(true);
         return;
       }
 
@@ -102,7 +110,9 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
         }
       } catch (err) {
         auth.clearSession();
-        navigate('/login');
+        setAuthError(true);
+      } finally {
+        setValidating(false);
       }
     };
     fetchProfile();
@@ -131,8 +141,8 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
             to={item.path}
             className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
               isActive 
-                ? 'bg-blue-600 text-white' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-primary text-primary-foreground' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
             }`}
           >
             <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -145,6 +155,18 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
 
   if (!auth.getSession()) {
     return null;
+  }
+
+  if (validating) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (authError) {
+    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -179,10 +201,19 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
               <p className="text-sm font-medium text-white truncate">{profile?.name || 'Loading...'}</p>
               <p className="text-xs text-slate-400 truncate">{profile?.role || 'Premium Account'}</p>
             </div>
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8" onClick={() => navigate('/customer/settings')}>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-accent h-8 w-8" onClick={() => {
+              const userRole = auth.getSession()?.user?.role?.toUpperCase();
+              if (userRole === 'ADMIN') {
+                navigate('/admin/settings');
+              } else if (userRole === 'DEVELOPER') {
+                navigate('/dev-portal/settings');
+              } else {
+                navigate('/customer/settings');
+              }
+            }}>
               <SettingsIcon className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8" onClick={handleLogout}>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-accent h-8 w-8" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -193,7 +224,7 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
         {/* Top Header */}
         <header className="h-16 bg-background border-b border-border flex items-center justify-between px-4 sm:px-8 shrink-0">
           <Sheet>
-            <SheetTrigger render={<Button size="icon" variant="outline" className="sm:hidden mr-2" />}>
+            <SheetTrigger render={<Button size="icon" variant="ghost" className="sm:hidden mr-2 text-muted-foreground hover:bg-accent" />}>
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle Menu</span>
             </SheetTrigger>
@@ -207,28 +238,52 @@ export function DashboardLayout({ role }: { role: 'customer' | 'admin' | 'develo
           </Sheet>
           
           <div className="hidden sm:flex items-center gap-2 text-muted-foreground text-sm">
-            <span>Pages</span> <span>/</span> <span className="text-foreground font-medium capitalize">{location.pathname.split('/').pop() || 'Dashboard'}</span>
+            <span>Pages</span> <span className="text-muted-foreground">/</span> <span className="text-foreground font-medium capitalize">{location.pathname.split('/').pop() || 'Dashboard'}</span>
           </div>
           
-          <div className="flex items-center gap-4 sm:gap-6 ml-auto sm:ml-0">
-            <div className="relative hidden sm:block">
-              <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+          <div className="flex items-center gap-2 sm:gap-4 ml-auto sm:ml-0">
+            <form 
+              className="relative hidden md:block"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const input = e.currentTarget.querySelector('input');
+                const query = input?.value?.trim();
+                if (!query) return;
+                const userRole = auth.getSession()?.user?.role?.toUpperCase();
+                if (userRole === 'ADMIN') {
+                  navigate(`/admin/transactions?search=${encodeURIComponent(query)}`);
+                } else {
+                  navigate(`/customer/transactions?search=${encodeURIComponent(query)}`);
+                }
+              }}
+            >
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search transactions..."
-                className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-xs w-64 focus-visible:ring-2 focus-visible:ring-blue-500 h-9 transition-all"
+                className="pl-9 pr-4 py-1.5 bg-muted border-border rounded-lg text-xs w-56 focus-visible:ring-2 focus-visible:ring-blue-500 h-9 transition-all"
               />
-            </div>
+            </form>
             <ModeToggle />
-            <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
-              <Bell className="h-6 w-6" />
+            <button 
+              className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+              onClick={() => {
+                const userRole = auth.getSession()?.user?.role?.toUpperCase();
+                if (userRole === 'ADMIN') {
+                  navigate('/admin/notifications');
+                } else {
+                  navigate('/customer/notifications');
+                }
+              }}
+            >
+              <Bell className="h-5 w-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
           </div>
         </header>
         
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col p-4 sm:p-8 overflow-y-auto scroll-smooth">
+        <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto scroll-smooth bg-muted/50">
           <div className="mx-auto w-full max-w-7xl">
             <Outlet />
           </div>

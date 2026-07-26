@@ -17,6 +17,10 @@ import { Statements } from '@/pages/Statements';
 import { AdminDashboard } from '@/pages/AdminDashboard';
 import { Users } from '@/pages/Users';
 import { AdminTransactions } from '@/pages/AdminTransactions';
+import { AdminCards } from '@/pages/AdminCards';
+import { AdminCardRequests } from '@/pages/AdminCardRequests';
+import { AdminAccounts } from '@/pages/AdminAccounts';
+import { AdminLoans } from '@/pages/AdminLoans';
 import { Reports } from '@/pages/Reports';
 import { FraudMonitoring } from '@/pages/FraudMonitoring';
 import { DevPortal } from '@/pages/DevPortal';
@@ -51,14 +55,20 @@ export default function App() {
           <Route path="*" element={<Navigate to="/customer" replace />} />
         </Route>
 
-        {/* Administrator Routes */}
-        <Route path="/admin" element={<DashboardLayout role="admin" />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<Users />} />
-          <Route path="transactions" element={<AdminTransactions />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="fraud" element={<FraudMonitoring />} />
-        </Route>
+         {/* Administrator Routes */}
+         <Route path="/admin" element={<DashboardLayout role="admin" />}>
+           <Route index element={<AdminDashboard />} />
+           <Route path="users" element={<Users />} />
+           <Route path="accounts" element={<AdminAccounts />} />
+           <Route path="cards" element={<AdminCards />} />
+           <Route path="card-requests" element={<AdminCardRequests />} />
+           <Route path="transactions" element={<AdminTransactions />} />
+           <Route path="loans" element={<AdminLoans />} />
+           <Route path="reports" element={<Reports />} />
+           <Route path="fraud" element={<FraudMonitoring />} />
+           <Route path="notifications" element={<Notifications />} />
+           <Route path="settings" element={<Settings />} />
+         </Route>
 
         {/* Developer Portal Routes */}
         <Route path="/dev-portal" element={<DashboardLayout role="developer" />}>
@@ -66,6 +76,7 @@ export default function App() {
           <Route path="docs" element={<ApiDocs />} />
           <Route path="keys" element={<ApiKeys />} />
           <Route path="analytics" element={<ApiAnalytics />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* Catch-all route */}
