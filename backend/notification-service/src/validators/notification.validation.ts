@@ -36,3 +36,18 @@ export const HistoryQuerySchema = z.object({
       return undefined;
     }),
 });
+
+export const BroadcastSchema = z.object({
+  title: z.string().min(1, { message: 'Title is required' }).max(255),
+  message: z.string().min(1, { message: 'Message is required' }),
+  type: z.enum(['EMAIL', 'SMS', 'PUSH'], { message: 'Invalid notification type' }),
+  targetRole: z.enum(['ALL', 'CUSTOMER', 'ADMIN', 'DEVELOPER'], { message: 'Invalid target role' }),
+  targetUserIds: z.array(z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid user ID format' })).optional(),
+});
+
+export const CreateNotificationSchema = z.object({
+  userId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, { message: 'Invalid user ID format' }),
+  title: z.string().min(1, { message: 'Title is required' }).max(255),
+  message: z.string().min(1, { message: 'Message is required' }),
+  type: z.enum(['EMAIL', 'SMS', 'PUSH'], { message: 'Invalid notification type' }),
+});

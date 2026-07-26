@@ -2,6 +2,8 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from 'shared-common';
 import { NotificationService } from '../services/notification.service';
 import {
+  BroadcastSchema,
+  CreateNotificationSchema,
   MarkReadSchema,
   DeleteParamSchema,
   HistoryQuerySchema,
@@ -33,6 +35,7 @@ export class NotificationController {
 
       res.json({
         success: true,
+        total: result.total,
         data: result.data,
       });
     } catch (err) {
@@ -78,6 +81,56 @@ export class NotificationController {
       res.json({
         success: true,
         message: 'Notification deleted successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  broadcastNotifications = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const bodyResult = BroadcastSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const result = await this.notificationService.broadcastNotifications(
+        req.user.id,
+        bodyResult.data
+      );
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createNotification = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const bodyResult = CreateNotificationSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const result = await this.notificationService.createNotification(
+        req.user.id,
+        bodyResult.data
+      );
+
+      res.json({
+        success: true,
+        data: result,
       });
     } catch (err) {
       next(err);

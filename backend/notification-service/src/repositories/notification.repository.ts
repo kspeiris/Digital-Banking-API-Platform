@@ -16,7 +16,7 @@ export class NotificationRepository {
       case 'SYSTEM':
         return ['system', 'maintenance', 'announcement', 'broadcast'];
       default:
-        return [];
+        throw new Error(`Unknown notification category: ${category}`);
     }
   }
 

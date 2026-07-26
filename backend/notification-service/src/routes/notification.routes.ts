@@ -7,6 +7,8 @@ const router = Router();
 const controller = new NotificationController();
 
 router.get('/', authMiddleware, authorize(['CUSTOMER', 'ADMIN']), controller.getNotifications);
+router.post('/broadcast', authMiddleware, authorize(['ADMIN']), controller.broadcastNotifications);
+router.post('/', authMiddleware, authorize(['ADMIN']), controller.createNotification);
 router.put('/read', authMiddleware, authorize(['CUSTOMER']), controller.markAsRead);
 router.delete('/:id', authMiddleware, authorize(['CUSTOMER']), controller.deleteNotification);
 
