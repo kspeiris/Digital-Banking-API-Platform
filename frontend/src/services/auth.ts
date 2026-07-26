@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:3001/api/v1/auth';
+import { API_URLS } from '@/config/api';
+
+const API_URL = API_URLS.auth;
 
 export interface UserSession {
   accessToken: string;
@@ -189,6 +191,13 @@ class AuthService {
 
   public async getProfile(): Promise<UserProfile> {
     return this.request('/profile');
+  }
+
+  public async changePassword(currentPassword: string, newPassword: string): Promise<any> {
+    return this.request('/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
   }
 }
 

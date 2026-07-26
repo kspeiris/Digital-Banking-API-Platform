@@ -1,6 +1,7 @@
 import { auth } from '@/services/auth';
+import { API_URLS } from '@/config/api';
 
-const API_URL = 'http://localhost:3003/api/v1/accounts';
+const API_URL = API_URLS.account;
 
 export interface Account {
   accountId: string;
@@ -12,6 +13,11 @@ export interface Account {
   availableBalance: number;
   status: string;
   createdAt?: string;
+  customer?: {
+    firstName: string;
+    lastName: string;
+    nic: string;
+  };
 }
 
 export interface StatementTransaction {
@@ -133,6 +139,34 @@ class AccountService {
 
     const res = await this.request(path);
     return res.data;
+  }
+
+  public async createAccount(data: {
+    accountNumber: string;
+    accountType: string;
+    currency: string;
+    branch?: string;
+    initialBalance?: number;
+    customerId?: string;
+  }): Promise<Account> {
+    const res = await this.request('/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return res.data;
+  }
+
+  public async updateAccountStatus(id: string, status: string): Promise<void> {
+    await this.request(`/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  public async deleteAccount(id: string): Promise<void> {
+    await this.request(`/${id}`, {
+      method: 'DELETE',
+    });
   }
 }
 

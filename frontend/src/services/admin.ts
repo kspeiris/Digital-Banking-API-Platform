@@ -1,6 +1,7 @@
 import { auth } from '@/services/auth';
+import { API_URLS } from '@/config/api';
 
-const API_URL = 'http://localhost:3009/admin';
+const API_URL = API_URLS.admin;
 
 export interface DashboardSummary {
   totalCustomers: number;
@@ -12,8 +13,21 @@ export interface DashboardSummary {
   apiRequestsToday: number;
 }
 
+export interface FraudAlert {
+  id: string;
+  userId: string;
+  user: string;
+  type: string;
+  trigger: string;
+  risk: string;
+  status: string;
+  time: string;
+  notificationId: string;
+}
+
 export interface AdminCustomer {
   customerId: string;
+  userId: string;
   name: string;
   email: string;
   status: string;
@@ -149,6 +163,68 @@ class AdminService {
   public async getAuditHistory(page: number, limit: number): Promise<{ total: number; data: AuditLog[] }> {
     const res = await this.request(`/audit?page=${page}&limit=${limit}`);
     return res.data;
+  }
+
+  public async getTransactions(params: {
+    page: number;
+    limit: number;
+    search?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+  }): Promise<{ total: number; data: any[] }> {
+    const query = new URLSearchParams();
+    query.append('page', params.page.toString());
+    query.append('limit', params.limit.toString());
+    if (params.search) query.append('search', params.search);
+    if (params.status) query.append('status', params.status);
+    if (params.from) query.append('from', params.from);
+    if (params.to) query.append('to', params.to);
+
+    const res = await this.request(`/transactions?${query.toString()}`);
+    return {
+      total: res.data?.total || 0,
+      data: res.data?.items || [],
+    };
+  }
+
+  public async getFraudAlerts(): Promise<{ total: number; data: FraudAlert[] }> {
+    const res = await this.request('/fraud-alerts');
+    return res.data;
+  }
+
+  public async freezeByUserId(userId: string, reason: string): Promise<any> {
+    return this.request('/customer/freeze-by-user', {
+      method: 'PUT',
+      body: JSON.stringify({ userId, reason }),
+    });
+  }
+
+  public async unfreezeByUserId(userId: string, reason?: string): Promise<any> {
+    return this.request('/customer/unfreeze-by-user', {
+      method: 'PUT',
+      body: JSON.stringify({ userId, reason }),
+    });
+  }
+
+  public async deleteCustomer(customerId: string): Promise<any> {
+    return this.request(`/customers/${customerId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  public async createCustomer(data: any): Promise<any> {
+    return this.request('/customers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  public async updateCustomer(customerId: string, data: any): Promise<any> {
+    return this.request(`/customers/${customerId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
 }
 
