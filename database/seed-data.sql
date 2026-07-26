@@ -1,3 +1,8 @@
+-- SECURITY WARNING: This seed file contains demo bcrypt password hashes for development only.
+-- These hashes correspond to well-known passwords and MUST NOT be used in production.
+-- For production deployments, use a seed script (e.g., seed-admin.ts) that generates fresh hashes at runtime.
+-- Demo accounts: admin@bank.com / Admin@123, john.doe@gmail.com / Customer123
+
 -- 1. Seed Roles
 INSERT INTO roles (id, name, description) VALUES 
 ('a0000000-0000-0000-0000-000000000001', 'Admin', 'System Administrator with full access'),

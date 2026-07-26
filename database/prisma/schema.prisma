@@ -46,6 +46,12 @@ enum CardStatus {
   EXPIRED
 }
 
+enum CardRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum NotificationType {
   EMAIL
   SMS
@@ -101,6 +107,7 @@ model Customer {
   accounts      Account[]
   beneficiaries Beneficiary[]
   loans         Loan[]
+  cardRequests  CardRequest[]
 
   @@map("customers")
 }
@@ -121,6 +128,7 @@ model Account {
   receivedTransactions Transaction[]   @relation("ReceivedTransactions")
   cards             Card[]
   scheduledTransfers ScheduledTransfer[]
+  cardRequests      CardRequest[]
 
   @@map("accounts")
 }
@@ -204,6 +212,22 @@ model CardLimit {
   card             Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@map("card_limits")
+}
+
+model CardRequest {
+  id               String           @id @default(uuid()) @db.Uuid
+  customerId       String           @map("customer_id") @db.Uuid
+  accountId        String           @map("account_id") @db.Uuid
+  cardType         String           @map("card_type") @db.VarChar(50)
+  status           CardRequestStatus @default(PENDING)
+  requestedAt      DateTime         @default(now()) @map("requested_at") @db.Timestamptz
+  reviewedAt       DateTime?        @map("reviewed_at") @db.Timestamptz
+  reviewedBy       String?          @map("reviewed_by") @db.Uuid
+  rejectionReason  String?          @map("rejection_reason") @db.Text
+  customer         Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  account          Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("card_requests")
 }
 
 model Loan {
