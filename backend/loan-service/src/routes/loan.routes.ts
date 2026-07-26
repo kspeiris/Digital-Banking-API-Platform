@@ -11,6 +11,9 @@ router.post('/', authMiddleware, authorize(['CUSTOMER']), controller.applyForLoa
 router.get('/', authMiddleware, authorize(['CUSTOMER', 'ADMIN']), controller.getHistory);
 router.get('/:id', authMiddleware, authorize(['CUSTOMER', 'ADMIN']), controller.getLoanDetails);
 router.get('/status/:id', authMiddleware, authorize(['CUSTOMER', 'ADMIN']), controller.getLoanStatus);
+router.put('/:id/approve', authMiddleware, authorize(['ADMIN']), controller.approveLoan);
+router.put('/:id/reject', authMiddleware, authorize(['ADMIN']), controller.rejectLoan);
+router.delete('/:id', authMiddleware, authorize(['CUSTOMER', 'ADMIN']), controller.cancelLoan);
 router.post(
   '/upload',
   authMiddleware,

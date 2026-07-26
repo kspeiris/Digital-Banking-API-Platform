@@ -5,8 +5,10 @@ import {
   ApplyLoanSchema,
   UploadDocParamSchema,
   LoanIdParamSchema,
+  ApproveLoanSchema,
+  RejectLoanSchema,
 } from '../validators/loan.validation';
-import { UnauthorizedException, BadRequestException } from 'shared-common';
+import { UnauthorizedException, BadRequestException, ForbiddenException } from 'shared-common';
 
 export class LoanController {
   private loanService: LoanService;
@@ -129,6 +131,93 @@ export class LoanController {
       res.json({
         success: true,
         message: 'Document uploaded successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  approveLoan = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      if (req.user.role?.toUpperCase() !== 'ADMIN') {
+        throw new ForbiddenException('Only admins can approve loans');
+      }
+
+      const paramResult = LoanIdParamSchema.safeParse(req.params);
+      if (!paramResult.success) {
+        throw paramResult.error;
+      }
+
+      const bodyResult = ApproveLoanSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const result = await this.loanService.approveLoan(paramResult.data.id, bodyResult.data.approvedAmount, bodyResult.data.interestRate);
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Loan approved successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  rejectLoan = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      if (req.user.role?.toUpperCase() !== 'ADMIN') {
+        throw new ForbiddenException('Only admins can reject loans');
+      }
+
+      const paramResult = LoanIdParamSchema.safeParse(req.params);
+      if (!paramResult.success) {
+        throw paramResult.error;
+      }
+
+      const bodyResult = RejectLoanSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const result = await this.loanService.rejectLoan(paramResult.data.id, bodyResult.data.reason);
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Loan rejected successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  cancelLoan = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const paramResult = LoanIdParamSchema.safeParse(req.params);
+      if (!paramResult.success) {
+        throw paramResult.error;
+      }
+
+      const result = await this.loanService.cancelLoan(paramResult.data.id, req.user.id);
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Loan cancelled successfully',
       });
     } catch (err) {
       next(err);

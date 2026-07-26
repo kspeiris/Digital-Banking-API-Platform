@@ -22,3 +22,12 @@ export const UploadDocParamSchema = z.object({
     { message: 'Invalid or unsupported document type' }
   ),
 });
+
+export const ApproveLoanSchema = z.object({
+  approvedAmount: z.number().positive({ message: 'Approved amount must be greater than 0' }),
+  interestRate: z.number().positive({ message: 'Interest rate must be greater than 0' }),
+});
+
+export const RejectLoanSchema = z.object({
+  reason: z.string().max(500).optional(),
+});

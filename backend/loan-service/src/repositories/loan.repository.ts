@@ -76,4 +76,24 @@ export class LoanRepository {
       data,
     });
   }
+
+  async updateLoanStatus(id: string, status: LoanStatus, approvedAmount?: number, interestRate?: number) {
+    const data: any = { status };
+    if (approvedAmount !== undefined) {
+      data.approvedAmount = approvedAmount;
+    }
+    if (interestRate !== undefined) {
+      data.interestRate = interestRate;
+    }
+    return prisma.loan.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteLoan(id: string) {
+    return prisma.loan.delete({
+      where: { id },
+    });
+  }
 }

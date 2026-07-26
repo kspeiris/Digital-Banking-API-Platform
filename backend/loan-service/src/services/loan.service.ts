@@ -77,14 +77,22 @@ export class LoanService {
   }
 
   async getHistory(userId: string, role: string) {
-    if (role === 'ADMIN') {
+    if (role?.toUpperCase() === 'ADMIN') {
       const loans = await this.loanRepository.findAllLoans();
       return loans.map((l) => ({
         loanId: l.id,
         loanType: l.loanType,
         requestedAmount: Number(l.requestedAmount),
+        approvedAmount: l.approvedAmount ? Number(l.approvedAmount) : 0,
+        interestRate: Number(l.interestRate),
+        durationMonths: l.durationMonths,
         status: l.status,
         submittedAt: l.submittedAt.toISOString().split('T')[0],
+        customer: l.customer ? {
+          firstName: l.customer.firstName,
+          lastName: l.customer.lastName,
+          nic: l.customer.nic,
+        } : null,
       }));
     }
 
@@ -109,7 +117,7 @@ export class LoanService {
       throw new NotFoundException('Loan application not found');
     }
 
-    if (role !== 'ADMIN') {
+    if (role?.toUpperCase() !== 'ADMIN') {
       const customer = await this.loanRepository.findCustomerByUserId(userId);
       if (!customer || loan.customerId !== customer.id) {
         throw new ForbiddenException('You do not have permission to access this loan');
@@ -134,7 +142,7 @@ export class LoanService {
       throw new NotFoundException('Loan application not found');
     }
 
-    if (role !== 'ADMIN') {
+    if (role?.toUpperCase() !== 'ADMIN') {
       const customer = await this.loanRepository.findCustomerByUserId(userId);
       if (!customer || loan.customerId !== customer.id) {
         throw new ForbiddenException('You do not have permission to access this loan');
@@ -174,7 +182,6 @@ export class LoanService {
         },
       });
 
-      // Audit Log
       await tx.auditLog.create({
         data: {
           userId: customer.userId,
@@ -183,5 +190,122 @@ export class LoanService {
         },
       });
     });
+  }
+
+  async approveLoan(loanId: string, approvedAmount: number, interestRate: number) {
+    const loan = await this.loanRepository.findLoanById(loanId);
+    if (!loan) {
+      throw new NotFoundException('Loan application not found');
+    }
+
+    if (loan.status !== LoanStatus.SUBMITTED && loan.status !== LoanStatus.UNDER_REVIEW) {
+      throw new BadRequestException('Only submitted or under-review loans can be approved');
+    }
+
+    if (approvedAmount <= 0 || approvedAmount > Number(loan.requestedAmount)) {
+      throw new BadRequestException('Approved amount must be greater than 0 and not exceed requested amount');
+    }
+
+    const updatedLoan = await this.loanRepository.updateLoanStatus(loanId, LoanStatus.APPROVED, approvedAmount, interestRate);
+
+    await prisma.notification.create({
+      data: {
+        userId: loan.customer.userId,
+        title: 'Loan Approved',
+        message: `Your ${loan.loanType.toLowerCase()} loan application has been approved for ${approvedAmount.toFixed(2)} LKR.`,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: loan.customer.userId,
+        action: 'LOAN_APPROVED',
+        module: 'LOAN',
+      },
+    });
+
+    return {
+      loanId: updatedLoan.id,
+      status: updatedLoan.status,
+      approvedAmount: Number(updatedLoan.approvedAmount),
+      interestRate: Number(updatedLoan.interestRate),
+    };
+  }
+
+  async rejectLoan(loanId: string, reason?: string) {
+    const loan = await this.loanRepository.findLoanById(loanId);
+    if (!loan) {
+      throw new NotFoundException('Loan application not found');
+    }
+
+    if (loan.status !== LoanStatus.SUBMITTED && loan.status !== LoanStatus.UNDER_REVIEW) {
+      throw new BadRequestException('Only submitted or under-review loans can be rejected');
+    }
+
+    const updatedLoan = await this.loanRepository.updateLoanStatus(loanId, LoanStatus.REJECTED);
+
+    await prisma.notification.create({
+      data: {
+        userId: loan.customer.userId,
+        title: 'Loan Rejected',
+        message: `Your ${loan.loanType.toLowerCase()} loan application has been rejected.${reason ? ` Reason: ${reason}` : ''}`,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: loan.customer.userId,
+        action: 'LOAN_REJECTED',
+        module: 'LOAN',
+      },
+    });
+
+    return {
+      loanId: updatedLoan.id,
+      status: updatedLoan.status,
+    };
+  }
+
+  async cancelLoan(loanId: string, userId: string) {
+    const customer = await this.loanRepository.findCustomerByUserId(userId);
+    if (!customer) {
+      throw new ForbiddenException('Customer profile not found');
+    }
+
+    const loan = await this.loanRepository.findLoanById(loanId);
+    if (!loan) {
+      throw new NotFoundException('Loan application not found');
+    }
+
+    if (loan.customerId !== customer.id) {
+      throw new ForbiddenException('You do not have permission to cancel this loan');
+    }
+
+    if (loan.status !== LoanStatus.SUBMITTED && loan.status !== LoanStatus.UNDER_REVIEW) {
+      throw new BadRequestException('Only submitted or under-review loans can be cancelled');
+    }
+
+    const updatedLoan = await this.loanRepository.updateLoanStatus(loanId, LoanStatus.REJECTED);
+
+    await prisma.notification.create({
+      data: {
+        userId: customer.userId,
+        title: 'Loan Cancelled',
+        message: `Your ${loan.loanType.toLowerCase()} loan application has been cancelled.`,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: customer.userId,
+        action: 'LOAN_CANCELLED',
+        module: 'LOAN',
+      },
+    });
+
+    return {
+      loanId: updatedLoan.id,
+      status: updatedLoan.status,
+    };
   }
 }
