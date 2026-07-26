@@ -1,4 +1,5 @@
 import { prisma } from '../config/database';
+import { AccountStatus } from '@prisma/client';
 
 export class AccountRepository {
   async findCustomerByUserId(userId: string) {
@@ -43,8 +44,114 @@ export class AccountRepository {
             firstName: true,
             lastName: true,
             nic: true,
+            user: {
+              select: {
+                id: true,
+              },
+            },
           },
         },
+      },
+    });
+  }
+
+  async findAccountByAccountNumber(accountNumber: string) {
+    return prisma.account.findUnique({
+      where: { accountNumber },
+    });
+  }
+
+  async findAccountByIdWithRelations(id: string) {
+    return prisma.account.findUnique({
+      where: { id },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            userId: true,
+            firstName: true,
+            lastName: true,
+            user: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+        cards: {
+          select: {
+            id: true,
+            status: true,
+          },
+        },
+        sentTransactions: {
+          where: {
+            status: 'SUCCESS',
+          },
+          select: {
+            id: true,
+          },
+        },
+        receivedTransactions: {
+          where: {
+            status: 'SUCCESS',
+          },
+          select: {
+            id: true,
+          },
+        },
+        scheduledTransfers: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+  }
+
+  async createAccount(data: {
+    customerId: string;
+    accountNumber: string;
+    accountType: string;
+    currency: string;
+    branch: string;
+    balance: number;
+    availableBalance: number;
+  }) {
+    return prisma.account.create({
+      data,
+    });
+  }
+
+  async updateAccountStatus(id: string, status: AccountStatus) {
+    return prisma.account.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
+  async deleteAccount(id: string) {
+    return prisma.account.delete({
+      where: { id },
+    });
+  }
+
+  async countActiveCards(accountId: string) {
+    return prisma.card.count({
+      where: {
+        accountId,
+        status: 'ACTIVE',
+      },
+    });
+  }
+
+  async countTransactionsForAccount(accountId: string) {
+    return prisma.transaction.count({
+      where: {
+        OR: [
+          { fromAccountId: accountId },
+          { toAccountId: accountId },
+        ],
       },
     });
   }
@@ -76,7 +183,7 @@ export class AccountRepository {
     });
   }
 
-  async countTransactionsForAccount(accountId: string, fromDate: Date, toDate: Date) {
+  async countTransactionsForAccountByDate(accountId: string, fromDate: Date, toDate: Date) {
     return prisma.transaction.count({
       where: {
         OR: [

@@ -1,6 +1,8 @@
 import { AccountRepository } from '../repositories/account.repository';
 import { NotFoundException, ForbiddenException, BadRequestException } from 'shared-common';
 import { redis } from '../config/redis';
+import { prisma } from '../config/database';
+import { AccountStatus } from '@prisma/client';
 
 export class AccountService {
   private accountRepository: AccountRepository;
@@ -10,14 +12,8 @@ export class AccountService {
   }
 
   async getAccountsForUser(userId: string, role: string) {
-    const cacheKey = `accounts:user:${userId}:${role}`;
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return JSON.parse(cached);
-    }
-
     let result: any[];
-    if (role === 'ADMIN') {
+    if (role?.toUpperCase() === 'ADMIN') {
       const accounts = await this.accountRepository.findAllAccounts();
       result = accounts.map(acc => ({
         accountId: acc.id,
@@ -51,7 +47,6 @@ export class AccountService {
       }));
     }
 
-    await redis.set(cacheKey, JSON.stringify(result), { EX: 300 }); // 5 minutes cache
     return result;
   }
 
@@ -61,7 +56,7 @@ export class AccountService {
       throw new NotFoundException('Account not found');
     }
 
-    if (role !== 'ADMIN') {
+    if (role?.toUpperCase() !== 'ADMIN') {
       const customer = await this.accountRepository.findCustomerByUserId(userId);
       if (!customer || account.customerId !== customer.id) {
         throw new ForbiddenException('You do not have permission to access this account');
@@ -91,12 +86,6 @@ export class AccountService {
   }
 
   async getAccountBalance(accountId: string, userId: string, role: string) {
-    const cacheKey = `balance:account:${accountId}`;
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return JSON.parse(cached);
-    }
-
     const account = await this.verifyAccountAccess(accountId, userId, role);
     const result = {
       balance: Number(account.balance),
@@ -104,7 +93,170 @@ export class AccountService {
       currency: account.currency,
     };
 
-    await redis.set(cacheKey, JSON.stringify(result), { EX: 30 }); // 30 seconds cache
     return result;
+  }
+
+  async createAccount(data: {
+    accountNumber: string;
+    accountType: string;
+    currency: string;
+    branch: string;
+    initialBalance: number;
+    customerId?: string;
+  }, userId: string, role: string) {
+    let customerId = data.customerId;
+
+    if (!customerId) {
+      const customer = await this.accountRepository.findCustomerByUserId(userId);
+      if (!customer) {
+        throw new ForbiddenException('Customer profile not found');
+      }
+      customerId = customer.id;
+    } else if (role?.toUpperCase() !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can create accounts for other customers');
+    }
+
+    const existing = await this.accountRepository.findAccountByAccountNumber(data.accountNumber);
+    if (existing) {
+      throw new BadRequestException('Account number already exists');
+    }
+
+    const account = await this.accountRepository.createAccount({
+      customerId,
+      accountNumber: data.accountNumber,
+      accountType: data.accountType,
+      currency: data.currency,
+      branch: data.branch,
+      balance: data.initialBalance,
+      availableBalance: data.initialBalance,
+    });
+
+    const targetUserId = customerId;
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.create({
+        data: {
+          userId: targetUserId,
+          action: 'ACCOUNT_CREATED',
+          module: 'ACCOUNT',
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: targetUserId,
+          title: 'Account Created',
+          message: `Account ${data.accountNumber} (${data.accountType}) has been created successfully with initial balance of ${data.currency} ${data.initialBalance}.`,
+        },
+      });
+    });
+
+    return account;
+  }
+
+  async updateAccountStatus(
+    id: string,
+    status: string,
+    userId: string,
+    role: string
+  ) {
+    const account = await this.accountRepository.findAccountByIdWithRelations(id);
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    if (role !== 'ADMIN') {
+      const customer = await this.accountRepository.findCustomerByUserId(userId);
+      if (!customer || account.customerId !== customer.id) {
+        throw new ForbiddenException('You do not have permission to update this account');
+      }
+    }
+
+    const validStatuses = ['ACTIVE', 'FROZEN', 'CLOSED'] as const;
+    if (!validStatuses.includes(status as any)) {
+      throw new BadRequestException(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    }
+
+    const statusEnum = status as AccountStatus;
+
+    if (account.status === statusEnum) {
+      throw new BadRequestException(`Account is already ${status}`);
+    }
+
+    await this.accountRepository.updateAccountStatus(id, statusEnum);
+
+    const customerUserId = account.customer?.user?.id;
+    if (customerUserId) {
+      await prisma.$transaction(async (tx) => {
+        await tx.auditLog.create({
+          data: {
+            userId: customerUserId,
+            action: 'ACCOUNT_STATUS_UPDATED',
+            module: 'ACCOUNT',
+          },
+        });
+
+        await tx.notification.create({
+          data: {
+            userId: customerUserId,
+            title: 'Account Status Updated',
+            message: `Your account ${account.accountNumber} status has been changed to ${status}.`,
+          },
+        });
+      });
+    }
+
+    return account;
+  }
+
+  async deleteAccount(id: string, userId: string, role: string) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can delete accounts');
+    }
+
+    const account = await this.accountRepository.findAccountByIdWithRelations(id);
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    if (account.status === 'CLOSED') {
+      throw new BadRequestException('Account is already closed');
+    }
+
+    if (Number(account.balance) !== 0) {
+      throw new BadRequestException('Account balance must be zero before deletion');
+    }
+
+    const activeCards = account.cards.filter((c: any) => c.status === 'ACTIVE').length;
+    if (activeCards > 0) {
+      throw new BadRequestException('Account has active cards. Deactivate all cards before closing the account');
+    }
+
+    const totalTransactions = account.sentTransactions.length + account.receivedTransactions.length;
+    if (totalTransactions > 0) {
+      throw new BadRequestException('Account has transactions. Cannot delete account with transaction history');
+    }
+
+    await this.accountRepository.deleteAccount(id);
+
+    const customerUserId = account.customer?.user?.id;
+    if (customerUserId) {
+      await prisma.$transaction(async (tx) => {
+        await tx.auditLog.create({
+          data: {
+            userId: customerUserId,
+            action: 'ACCOUNT_DELETED',
+            module: 'ACCOUNT',
+          },
+        });
+
+        await tx.notification.create({
+          data: {
+            userId: customerUserId,
+            title: 'Account Closed',
+            message: `Your account ${account.accountNumber} has been closed and deleted.`,
+          },
+        });
+      });
+    }
   }
 }

@@ -2,8 +2,13 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from 'shared-common';
 import { AccountService } from '../services/account.service';
 import { StatementService } from '../services/statement.service';
-import { AccountIdParamSchema, StatementQuerySchema } from '../validators/account.validation';
-import { BadRequestException, UnauthorizedException } from 'shared-common';
+import {
+  AccountIdParamSchema,
+  StatementQuerySchema,
+  CreateAccountSchema,
+  UpdateAccountStatusSchema,
+} from '../validators/account.validation';
+import { BadRequestException, UnauthorizedException, ForbiddenException } from 'shared-common';
 
 export class AccountController {
   private accountService: AccountService;
@@ -24,6 +29,101 @@ export class AccountController {
       res.json({
         success: true,
         data: accounts,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createAccount = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      if (req.user.role?.toUpperCase() !== 'ADMIN') {
+        throw new ForbiddenException('Only admins can create accounts');
+      }
+
+      const bodyResult = CreateAccountSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const account = await this.accountService.createAccount(bodyResult.data, req.user.id, req.user.role);
+
+      res.status(201).json({
+        success: true,
+        message: 'Account created successfully',
+        data: {
+          accountId: account.id,
+          accountNumber: account.accountNumber,
+          accountType: account.accountType.toUpperCase(),
+          currency: account.currency,
+          branch: account.branch,
+          balance: Number(account.balance),
+          availableBalance: Number(account.availableBalance),
+          status: account.status,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateAccountStatus = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const paramResult = AccountIdParamSchema.safeParse(req.params);
+      if (!paramResult.success) {
+        throw paramResult.error;
+      }
+
+      const bodyResult = UpdateAccountStatusSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const account = await this.accountService.updateAccountStatus(
+        paramResult.data.id,
+        bodyResult.data.status,
+        req.user.id,
+        req.user.role
+      );
+
+      res.json({
+        success: true,
+        message: 'Account status updated successfully',
+        data: {
+          accountId: account.id,
+          accountNumber: account.accountNumber,
+          status: account.status,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  deleteAccount = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const paramResult = AccountIdParamSchema.safeParse(req.params);
+      if (!paramResult.success) {
+        throw paramResult.error;
+      }
+
+      await this.accountService.deleteAccount(paramResult.data.id, req.user.id, req.user.role);
+
+      res.json({
+        success: true,
+        message: 'Account closed and deleted successfully',
       });
     } catch (err) {
       next(err);
