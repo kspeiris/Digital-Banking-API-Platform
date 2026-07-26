@@ -76,7 +76,7 @@ services:
       - PORT=3001
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3001:3001"
     depends_on:
@@ -96,7 +96,7 @@ services:
     environment:
       - PORT=3002
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3002:3002"
     depends_on:
@@ -115,7 +115,7 @@ services:
       - PORT=3003
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3003:3003"
     depends_on:
@@ -135,7 +135,7 @@ services:
     environment:
       - PORT=3005
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3005:3005"
     depends_on:
@@ -153,7 +153,7 @@ services:
     environment:
       - PORT=3004
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
       - REDIS_URL=redis://redis:6379
     ports:
       - "3004:3004"
@@ -174,7 +174,7 @@ services:
     environment:
       - PORT=3006
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3006:3006"
     depends_on:
@@ -192,7 +192,7 @@ services:
     environment:
       - PORT=3007
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3007:3007"
     depends_on:
@@ -213,7 +213,7 @@ services:
       - PORT=3008
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3008:3008"
     depends_on:
@@ -234,7 +234,7 @@ services:
       - PORT=3009
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3009:3009"
     depends_on:
@@ -252,7 +252,7 @@ services:
     environment:
       - PORT=3010
       - DATABASE_URL=postgresql://bankuser:password@postgres:5432/bankdb?schema=public
-      - JWT_SECRET=super-secret-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
     ports:
       - "3010:3010"
     depends_on:
