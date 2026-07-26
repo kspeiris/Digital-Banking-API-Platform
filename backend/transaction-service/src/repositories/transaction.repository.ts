@@ -192,4 +192,24 @@ export class TransactionRepository {
       },
     });
   }
+
+  async updateTransactionStatus(id: string, status: TransactionStatus) {
+    return prisma.transaction.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
+  async findTransactionsByAccountId(
+    accountId: string,
+    status?: TransactionStatus
+  ) {
+    return prisma.transaction.findMany({
+      where: {
+        OR: [{ fromAccountId: accountId }, { toAccountId: accountId }],
+        ...(status ? { status } : {}),
+      },
+      take: 1,
+    });
+  }
 }

@@ -41,75 +41,84 @@ export class SchedulerService {
     logger.info(`Found ${dueTransfers.length} due scheduled transfers.`);
 
     for (const transfer of dueTransfers) {
-      try {
-        // Resolve customer user to execute transfer context
-        const sourceAccount = await prisma.account.findUnique({
-          where: { id: transfer.fromAccount },
-          include: { customer: true },
-        });
+      let retries = 0;
+      const maxRetries = 3;
+      let success = false;
 
-        if (!sourceAccount) {
-          throw new Error('Source account not found');
-        }
-
-        const beneficiary = transfer.beneficiary;
-
-        // Determine if internal or external transfer
-        const isInternal =
-          beneficiary.bankName.toLowerCase() === 'digitalbank' ||
-          beneficiary.bankName.toLowerCase() === 'digital banking' ||
-          beneficiary.bankName.toLowerCase() === 'digital banking platform';
-
-        let internalDestAccount = null;
-        if (isInternal) {
-          internalDestAccount = await prisma.account.findUnique({
-            where: { accountNumber: beneficiary.accountNumber },
+      while (!success && retries < maxRetries) {
+        try {
+          const sourceAccount = await prisma.account.findUnique({
+            where: { id: transfer.fromAccount },
+            include: { customer: true },
           });
+
+          if (!sourceAccount) {
+            throw new Error('Source account not found');
+          }
+
+          const beneficiary = transfer.beneficiary;
+
+          const isInternal =
+            beneficiary.bankName.toLowerCase() === 'digitalbank' ||
+            beneficiary.bankName.toLowerCase() === 'digital banking' ||
+            beneficiary.bankName.toLowerCase() === 'digital banking platform';
+
+          let internalDestAccount = null;
+          if (isInternal) {
+            internalDestAccount = await prisma.account.findUnique({
+              where: { accountNumber: beneficiary.accountNumber },
+            });
+          }
+
+          if (isInternal && internalDestAccount) {
+            await this.transferService.executeInternalTransfer(
+              sourceAccount.customer.userId,
+              {
+                fromAccountId: transfer.fromAccount,
+                toAccountId: internalDestAccount.id,
+                amount: Number(transfer.amount),
+                description: 'Scheduled Internal Transfer',
+              }
+            );
+          } else {
+            await this.transferService.executeExternalTransfer(
+              sourceAccount.customer.userId,
+              {
+                fromAccountId: transfer.fromAccount,
+                beneficiaryId: transfer.beneficiaryId,
+                amount: Number(transfer.amount),
+                description: 'Scheduled External Transfer',
+              }
+            );
+          }
+
+          const nextDate = this.calculateNextExecution(transfer.nextExecution, transfer.frequency);
+
+          if (nextDate) {
+            await this.transactionRepository.updateScheduledTransferStatus(
+              transfer.id,
+              'ACTIVE',
+              nextDate
+            );
+          } else {
+            await this.transactionRepository.updateScheduledTransferStatus(
+              transfer.id,
+              'COMPLETED'
+            );
+          }
+
+          logger.info(`Successfully executed scheduled transfer ${transfer.id}`);
+          success = true;
+        } catch (err: any) {
+          retries++;
+          if (retries >= maxRetries) {
+            logger.error(`Failed to execute scheduled transfer ${transfer.id} after ${maxRetries} attempts: ${err.message}`, { err });
+            await this.transactionRepository.updateScheduledTransferStatus(transfer.id, 'FAILED');
+          } else {
+            logger.warn(`Retry ${retries}/${maxRetries} for scheduled transfer ${transfer.id}: ${err.message}`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+          }
         }
-
-        if (isInternal && internalDestAccount) {
-          await this.transferService.executeInternalTransfer(
-            sourceAccount.customer.userId,
-            {
-              fromAccountId: transfer.fromAccount,
-              toAccountId: internalDestAccount.id,
-              amount: Number(transfer.amount),
-              description: 'Scheduled Internal Transfer',
-            }
-          );
-        } else {
-          await this.transferService.executeExternalTransfer(
-            sourceAccount.customer.userId,
-            {
-              fromAccountId: transfer.fromAccount,
-              beneficiaryId: transfer.beneficiaryId,
-              amount: Number(transfer.amount),
-              description: 'Scheduled External Transfer',
-            }
-          );
-        }
-
-        // Calculate next execution date based on frequency
-        const nextDate = this.calculateNextExecution(transfer.nextExecution, transfer.frequency);
-
-        if (nextDate) {
-          await this.transactionRepository.updateScheduledTransferStatus(
-            transfer.id,
-            'ACTIVE',
-            nextDate
-          );
-        } else {
-          await this.transactionRepository.updateScheduledTransferStatus(
-            transfer.id,
-            'COMPLETED'
-          );
-        }
-
-        logger.info(`Successfully executed scheduled transfer ${transfer.id}`);
-      } catch (err: any) {
-        logger.error(`Failed to execute scheduled transfer ${transfer.id}: ${err.message}`, { err });
-        // Mark status as FAILED so it doesn't loop forever or block
-        await this.transactionRepository.updateScheduledTransferStatus(transfer.id, 'FAILED');
       }
     }
   }

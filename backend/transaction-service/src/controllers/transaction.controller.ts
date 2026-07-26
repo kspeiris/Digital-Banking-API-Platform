@@ -10,6 +10,8 @@ import {
   ScheduledTransferSchema,
   TransactionQuerySchema,
   TransactionIdParamSchema,
+  CancelTransactionSchema,
+  DisputeTransactionSchema,
 } from '../validators/transaction.validation';
 import { UnauthorizedException, ForbiddenException, BadRequestException } from 'shared-common';
 
@@ -218,6 +220,62 @@ export class TransactionController {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="receipt-${details.reference}.pdf"`);
       res.send(buffer);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  cancelTransaction = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const paramResult = TransactionIdParamSchema.safeParse(req.params);
+      if (!paramResult.success) {
+        throw paramResult.error;
+      }
+
+      const bodyResult = CancelTransactionSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const result = await this.transactionService.cancelTransaction(
+        paramResult.data.id,
+        req.user.id,
+        req.user.role
+      );
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  disputeTransaction = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const paramResult = TransactionIdParamSchema.safeParse(req.params);
+      if (!paramResult.success) {
+        throw paramResult.error;
+      }
+
+      const bodyResult = DisputeTransactionSchema.safeParse(req.body);
+      if (!bodyResult.success) {
+        throw bodyResult.error;
+      }
+
+      const result = await this.transactionService.disputeTransaction(
+        paramResult.data.id,
+        req.user.id,
+        bodyResult.data.reason
+      );
+
+      res.json(result);
     } catch (err) {
       next(err);
     }

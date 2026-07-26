@@ -1,6 +1,7 @@
 import { TransactionRepository } from '../repositories/transaction.repository';
-import { NotFoundException, ForbiddenException } from 'shared-common';
+import { NotFoundException, ForbiddenException, BadRequestException } from 'shared-common';
 import { TransactionType, TransactionStatus } from '@prisma/client';
+import { prisma } from '../config/database';
 
 export class TransactionService {
   private transactionRepository: TransactionRepository;
@@ -65,7 +66,7 @@ export class TransactionService {
       throw new NotFoundException('Transaction not found');
     }
 
-    if (role !== 'ADMIN') {
+    if (role?.toUpperCase() !== 'ADMIN') {
       const customer = await this.transactionRepository.findCustomerByUserId(userId);
       if (!customer) {
         throw new ForbiddenException('Customer profile not found');
@@ -94,5 +95,121 @@ export class TransactionService {
       description: tx.description,
       type: tx.transactionType,
     };
+  }
+
+  async cancelTransaction(id: string, userId: string, role: string) {
+    const tx = await this.transactionRepository.findTransactionById(id);
+    if (!tx) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    if (tx.status !== TransactionStatus.PENDING) {
+      throw new BadRequestException('Only pending transactions can be cancelled');
+    }
+
+    if (role?.toUpperCase() !== 'ADMIN') {
+      const customer = await this.transactionRepository.findCustomerByUserId(userId);
+      if (!customer) {
+        throw new ForbiddenException('Customer profile not found');
+      }
+
+      const isSender = tx.fromAccount && tx.fromAccount.customerId === customer.id;
+      if (!isSender) {
+        throw new ForbiddenException('You can only cancel your own pending transactions');
+      }
+
+      const created = new Date(tx.createdAt);
+      const now = new Date();
+      const diffMs = now.getTime() - created.getTime();
+      const diffMins = diffMs / (1000 * 60);
+      if (diffMins > 5) {
+        throw new BadRequestException('Pending transactions can only be cancelled within 5 minutes of creation');
+      }
+    }
+
+    await prisma.$transaction(async (txPrisma) => {
+      await txPrisma.transaction.update({
+        where: { id: tx.id },
+        data: { status: TransactionStatus.FAILED },
+      });
+
+      if (tx.fromAccountId) {
+        await txPrisma.account.update({
+          where: { id: tx.fromAccountId },
+          data: {
+            balance: { increment: tx.amount },
+            availableBalance: { increment: tx.amount },
+          },
+        });
+      }
+
+      const targetUserId = tx.toAccount?.customer?.userId || tx.fromAccount?.customer?.userId;
+      if (targetUserId) {
+        await txPrisma.notification.create({
+          data: {
+            userId: targetUserId,
+            title: 'Transaction Cancelled',
+            message: `Transaction ${tx.transactionReference} has been cancelled.`,
+          },
+        });
+
+        await txPrisma.auditLog.create({
+          data: {
+            userId: targetUserId,
+            action: 'TRANSACTION_CANCEL',
+            module: 'TRANSACTION',
+          },
+        });
+      }
+    });
+
+    return { success: true, message: 'Transaction cancelled successfully' };
+  }
+
+  async disputeTransaction(id: string, userId: string, reason: string) {
+    const transaction = await this.transactionRepository.findTransactionById(id);
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    if (transaction.status !== TransactionStatus.SUCCESS) {
+      throw new BadRequestException('Only successful transactions can be disputed');
+    }
+
+    const customer = await this.transactionRepository.findCustomerByUserId(userId);
+    if (!customer) {
+      throw new ForbiddenException('Customer profile not found');
+    }
+
+    const isSender = transaction.fromAccount && transaction.fromAccount.customerId === customer.id;
+    const isReceiver = transaction.toAccount && transaction.toAccount.customerId === customer.id;
+    if (!isSender && !isReceiver) {
+      throw new ForbiddenException('You can only dispute your own transactions');
+    }
+
+    await prisma.$transaction(async (txPrisma) => {
+      await txPrisma.transaction.update({
+        where: { id },
+        data: { status: TransactionStatus.FAILED },
+      });
+
+      await txPrisma.notification.create({
+        data: {
+          userId: customer.userId,
+          title: 'Transaction Disputed',
+          message: `Your dispute for transaction ${transaction.transactionReference} has been submitted. Reason: ${reason}`,
+        },
+      });
+
+      await txPrisma.auditLog.create({
+        data: {
+          userId: customer.userId,
+          action: 'TRANSACTION_DISPUTE',
+          module: 'TRANSACTION',
+        },
+      });
+    });
+
+    return { success: true, message: 'Transaction dispute submitted successfully' };
   }
 }

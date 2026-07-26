@@ -55,3 +55,11 @@ export const TransactionQuerySchema = z.object({
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
+
+export const CancelTransactionSchema = z.object({
+  reason: z.string().max(255).optional(),
+});
+
+export const DisputeTransactionSchema = z.object({
+  reason: z.string().min(1, 'Reason is required').max(500, 'Reason must be at most 500 characters'),
+});
